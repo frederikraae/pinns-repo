@@ -1,0 +1,33 @@
+Every time we start up working in the repository do:
+
+# Stay updated
+1. Switch to main branch
+2. Pull latest changes
+
+# When we start on a new task
+3. Create a new branch from main - make sure to create it from main pulling the latest changes
+    # Name it something like "feature/settings-page" or "fix/login-error" or "docs/readme-update"
+
+# While working
+4. Make your code changes - edit files normally
+5. Review changes in Source Control - review diff of each file before commiting
+6. Stage changes
+7. Commit with a clear message
+8. Push your branch
+
+# Before merging branch into main
+9. Pull latest main - then merge main with feature branch 
+    (use Merge Branch in VS Code being on the feature branch, and then choose main)
+10. Test everything - i.e. make sure the code still work with the changes from main
+11. Push again
+
+# When the work is ready
+12. Open pull request from feature branch --> main
+(13. Ask the other to review on GitHub)
+
+# After pull request is merged
+14. Switch back to main
+15. Pull the merged changes
+16. Delete the old feature branch
+
+
