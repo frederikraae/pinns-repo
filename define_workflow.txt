@@ -19,7 +19,7 @@ Every time we start up working in the repository do:
 9. Pull latest main - then merge main with feature branch 
     (use Merge Branch in VS Code being on the feature branch, and then choose main)
 10. Test everything - i.e. make sure the code still work with the changes from main
-11. Push again
+11. Push again (if something was changed)
 
 # When the work is ready
 12. Open pull request from feature branch --> main
