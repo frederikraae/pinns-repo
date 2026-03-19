@@ -11,7 +11,7 @@ h_chos = lambda x: np.sin(x)
 # Define wave speed
 c = 2.5
 
-# Define spacial range
+# Define spatial range
 xa = -2.0
 xb = 2.0
 
@@ -44,7 +44,7 @@ lam_bc = 1.0
 lam_ic = 1.0
 
 # Training loop
-n_epoch = 1000
+n_epoch = 10000
 for epoch in range(n_epoch):
     optimizer.zero_grad()
 
@@ -64,7 +64,7 @@ for epoch in range(n_epoch):
         u, X,
         grad_outputs=torch.ones_like(u),
         create_graph=True
-    )
+    )[0]
 
     u_x = grad_u[:, 0:1]
     u_t = grad_u[:, 1:2]
@@ -74,13 +74,13 @@ for epoch in range(n_epoch):
 
     # BC loss
     u_bc = net(X_bc)
-    u_true_bc = h_chos(X_bc[:, 0:1] - c * X[X_bc[:, 1:2]])
+    u_true_bc = h_chos(X_bc[:, 0:1] - c * X_bc[:, 1:2])
     loss_bc = torch.mean((u_bc - u_true_bc)**2)
 
     # IC loss
     u_ic = net(X_ic)
-    u_true_ic = h_chos(X_ic[:, 0:1], X_ic[:, 1:2])
-    loss_ic = torch.mean((u_bc - u_true_bc)**2)
+    u_true_ic = h_chos(X_ic[:, 0:1])
+    loss_ic = torch.mean((u_ic - u_true_ic)**2)
 
     # Total loss
     loss = lam_pde * loss_pde + lam_bc * loss_bc + lam_ic * loss_ic
@@ -97,4 +97,67 @@ for epoch in range(n_epoch):
             f"ic={loss_ic.item():.6e}"
         )
 
+# Evaluation
+n_test = 100
 
+x = torch.linspace(xa, xb, n_test)
+t = torch.linspace(t0, t_final, n_test)
+
+X, T = torch.meshgrid(x, t, indexing="ij")
+
+XT = torch.cat(
+    [X.reshape(-1, 1), T.reshape(-1, 1)],
+    dim=1
+)
+
+net.eval()
+
+with torch.no_grad():
+    u_pred = net(XT)
+    u_exact = h_chos(XT[:, 0:1] - c * XT[:, 1:2])
+
+u_pred = u_pred.reshape(n_test, n_test)
+u_exact = u_exact.reshape(n_test, n_test)
+
+error = u_pred - u_exact
+
+# Convert to numpy for plotting
+Xn = X.numpy()
+Tn = T.numpy()
+u_pred_n = u_pred.numpy()
+u_exact_n = u_exact.numpy()
+error_n = error.numpy()
+
+# Use same levels for exact and prediction
+vmin = min(u_exact_n.min(), u_pred_n.min())
+vmax = max(u_exact_n.max(), u_pred_n.max())
+levels = np.linspace(vmin, vmax, 30)
+
+# Separate symmetric scale for error
+err_max = np.max(np.abs(error_n))
+err_levels = np.linspace(-err_max, err_max, 30)
+
+fig, axes = plt.subplots(1, 3, figsize=(15, 4), constrained_layout=True)
+
+# Exact
+cf1 = axes[0].contourf(Xn, Tn, u_exact_n, levels=levels)
+axes[0].set_title("Exact solution")
+axes[0].set_xlabel("x")
+axes[0].set_ylabel("t")
+fig.colorbar(cf1, ax=axes[0])
+
+# Prediction
+cf2 = axes[1].contourf(Xn, Tn, u_pred_n, levels=levels)
+axes[1].set_title("PINN prediction")
+axes[1].set_xlabel("x")
+axes[1].set_ylabel("t")
+fig.colorbar(cf2, ax=axes[1])
+
+# Error
+cf3 = axes[2].contourf(Xn, Tn, error_n, levels=err_levels)
+axes[2].set_title("Error: prediction - exact")
+axes[2].set_xlabel("x")
+axes[2].set_ylabel("t")
+fig.colorbar(cf3, ax=axes[2])
+
+plt.show()
