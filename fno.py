@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 from neuralop.models import FNO
 
-torch.manual_seed(0)
+torch.manual_seed(2)
 
 # Make dataset
 n_samples = 200

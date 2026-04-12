@@ -10,10 +10,10 @@ torch.manual_seed(0)
 # ----------------------------
 # Make dataset
 # ----------------------------
-n_samples = 200
-n_grid = 128
-n_modes = 8
-L = 10
+n_samples = 200   # number of functions
+n_grid = 128      # spatial resolution
+n_modes = 8       # number of sine modes
+L = 10            # domain length
 
 x = torch.linspace(0, L, n_grid)
 
