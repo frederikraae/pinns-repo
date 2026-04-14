@@ -60,7 +60,7 @@ fno = FNO(
 opt_fno = torch.optim.Adam(fno.parameters(), lr=1e-3)
 loss_fn = nn.MSELoss()
 
-n_epochs_fno = 2000
+n_epochs_fno = 1000
 
 for epoch in range(n_epochs_fno):
     pred = fno(X)
@@ -149,7 +149,7 @@ u_b_true = torch.tensor([[0.0]], dtype=torch.float32)
 # ============================================================
 lam_bc = 10.0
 lam_reg = 1
-n_epochs_pinn = 2000
+n_epochs_pinn = 1000
 
 for epoch in range(n_epochs_pinn):
     opt_pinn.zero_grad()
@@ -240,7 +240,8 @@ plt.ylabel("value")
 plt.title("Hybrid solver: FNO + PINN")
 plt.legend()
 plt.tight_layout()
-plt.show()
+plt.savefig("hybrid_solution.png", dpi=300, bbox_inches="tight")
+plt.close()
 
 # pointwise squared error for the trained sample
 se_fno = (u_fno_vals - u_true_vals) ** 2
@@ -254,4 +255,5 @@ plt.ylabel("Squared error")
 plt.title("Pointwise squared error on trained sample")
 plt.legend()
 plt.tight_layout()
-plt.show()
+plt.savefig("hybrid_error.png", dpi=300, bbox_inches="tight")
+plt.close()
