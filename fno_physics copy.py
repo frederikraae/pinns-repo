@@ -60,7 +60,7 @@ fno = FNO(
 opt_fno = torch.optim.Adam(fno.parameters(), lr=1e-3)
 loss_fn = nn.MSELoss()
 
-n_epochs_fno = 2000
+n_epochs_fno = 1000
 
 for epoch in range(n_epochs_fno):
     pred = fno(X)
@@ -149,7 +149,7 @@ u_b_true = torch.tensor([[0.0]], dtype=torch.float32)
 # ============================================================
 lam_bc = 10.0
 lam_reg = 1
-n_epochs_pinn = 2000
+n_epochs_pinn = 1000
 
 for epoch in range(n_epochs_pinn):
     opt_pinn.zero_grad()
