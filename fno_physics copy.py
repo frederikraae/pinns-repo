@@ -240,7 +240,8 @@ plt.ylabel("value")
 plt.title("Hybrid solver: FNO + PINN")
 plt.legend()
 plt.tight_layout()
-plt.show()
+plt.savefig("hybrid_solution.png", dpi=300, bbox_inches="tight")
+plt.close()
 
 # pointwise squared error for the trained sample
 se_fno = (u_fno_vals - u_true_vals) ** 2
@@ -254,4 +255,5 @@ plt.ylabel("Squared error")
 plt.title("Pointwise squared error on trained sample")
 plt.legend()
 plt.tight_layout()
-plt.show()
+plt.savefig("hybrid_error.png", dpi=300, bbox_inches="tight")
+plt.close()
