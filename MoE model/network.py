@@ -30,3 +30,26 @@ class MLP(nn.Module):
 
     def forward(self, x):
         return self.model(x)
+    
+class MoEPINN(nn.Module):
+    def __init__(self, input_dim=2, output_dim=1, hidden=[64,64,64], n_experts=2):
+        super().__init__()
+        self.n_experts = n_experts
+
+        self.experts = nn.ModuleList([
+            MLP(input_dim, output_dim, hidden) for _ in range(n_experts)
+        ])
+
+        self.gate = MLP(input_dim, n_experts, [64, 64])
+
+    def forward(self, x):
+        # x has shape (N, 2) = [t, lambda]
+        expert_outputs = [expert(x) for expert in self.experts]   # K tensors of shape (N,1)
+        expert_outputs = torch.stack(expert_outputs, dim=-1)      # (N,1,K)
+
+        gate_logits = self.gate(x)                                # (N,K)
+        gate_weights = torch.softmax(gate_logits, dim=1)          # (N,K)
+        gate_weights = gate_weights.unsqueeze(1)                  # (N,1,K)
+
+        u_hat = torch.sum(gate_weights * expert_outputs, dim=-1)  # (N,1)
+        return u_hat, gate_weights
