@@ -30,26 +30,69 @@ class MLP(nn.Module):
 
     def forward(self, x):
         return self.model(x)
-    
+
 class MoEPINN(nn.Module):
-    def __init__(self, input_dim=2, output_dim=1, hidden=[64,64,64], n_experts=2):
+    def __init__(self, input_dim=1, output_dim=1, hidden=[100,100], n_experts=2):
         super().__init__()
+
         self.n_experts = n_experts
 
+        # ---- Experts ----
         self.experts = nn.ModuleList([
-            MLP(input_dim, output_dim, hidden) for _ in range(n_experts)
+            MLP(input_size=input_dim, output_size=output_dim, hidden_layers=hidden)
+            for _ in range(n_experts)
         ])
 
-        self.gate = MLP(input_dim, n_experts, [64, 64])
+        # ---- Gating network ----
+        self.gate = MLP(input_size=input_dim, output_size=n_experts, hidden_layers=hidden)
+
+        # ---- Initialise weights (Xavier) ----
+        self._init_weights()
+
+    def _init_weights(self):
+        for m in self.modules():
+            if isinstance(m, nn.Linear):
+                nn.init.xavier_uniform_(m.weight)
+                nn.init.zeros_(m.bias)
 
     def forward(self, x):
-        # x has shape (N, 2) = [t, lambda]
-        expert_outputs = [expert(x) for expert in self.experts]   # K tensors of shape (N,1)
+        # ---- Expert outputs ----
+        expert_outputs = [expert(x) for expert in self.experts]   # K × (N,1)
         expert_outputs = torch.stack(expert_outputs, dim=-1)      # (N,1,K)
 
+        # ---- Gating weights ----
         gate_logits = self.gate(x)                                # (N,K)
         gate_weights = torch.softmax(gate_logits, dim=1)          # (N,K)
         gate_weights = gate_weights.unsqueeze(1)                  # (N,1,K)
 
+        # ---- Mixture ----
         u_hat = torch.sum(gate_weights * expert_outputs, dim=-1)  # (N,1)
+
         return u_hat, gate_weights
+    
+class SoftAdapt:
+    def __init__(self, beta=0.1, eps=1e-8):
+        self.beta = beta
+        self.eps = eps
+        self.prev_losses = None
+
+    def get_weights(self, losses):
+        """
+        losses: list of scalar torch tensors, e.g. [loss_pde, loss_ic, loss_balance]
+        returns: torch tensor of adaptive weights summing to 1
+        """
+        current = torch.tensor([L.detach().item() for L in losses], dtype=torch.float32)
+
+        if self.prev_losses is None:
+            self.prev_losses = current
+            return torch.ones_like(current) / len(current)
+
+        ratios = current / (self.prev_losses + self.eps)
+        weights = torch.softmax(ratios / self.beta, dim=0)
+
+        # prevent collapse
+        weights = 0.1 * torch.ones_like(weights) + 0.9 * weights
+        weights = weights / weights.sum()
+
+        self.prev_losses = current
+        return weights
