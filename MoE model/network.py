@@ -30,52 +30,6 @@ class MLP(nn.Module):
 
     def forward(self, x):
         return self.model(x)
-
-class MoEPINN(nn.Module):
-    def __init__(self, input_dim=1, output_dim=1, hidden=[100,100], n_experts=2, temperature=1):
-        super().__init__()
-
-        self.n_experts = n_experts
-        self.temperature = temperature
-
-        # ---- Experts ----
-        self.experts = nn.ModuleList([
-            MLP(
-                input_size=input_dim, 
-                output_size=output_dim, 
-                hidden_layers=hidden
-                ) for _ in range(n_experts)])
-
-        # ---- Gating network ----
-        self.gate = MLP(
-            input_size=input_dim, 
-            output_size=n_experts, 
-            hidden_layers=[32,32]
-            )
-
-        # ---- Initialise weights (Xavier) ----
-        self._init_weights()
-
-    def _init_weights(self):
-        for m in self.modules():
-            if isinstance(m, nn.Linear):
-                nn.init.xavier_uniform_(m.weight)
-                nn.init.zeros_(m.bias)
-
-    def forward(self, x):
-        # ---- Expert outputs ----
-        expert_outputs = [expert(x) for expert in self.experts]   # K × (N,1)
-        expert_outputs = torch.stack(expert_outputs, dim=-1)      # (N,1,K)
-
-        # ---- Gating weights ----
-        gate_logits = self.gate(x)                                # (N,K)
-        gate_weights = torch.softmax(gate_logits / self.temperature, dim=1)          # (N,K)
-        gate_weights = gate_weights.unsqueeze(1)                  # (N,1,K)
-
-        # ---- Mixture ----
-        u_hat = torch.sum(gate_weights * expert_outputs, dim=-1)  # (N,1)
-
-        return u_hat, gate_weights
     
 class SoftAdapt:
     def __init__(self, beta=0.1, eps=1e-8):
