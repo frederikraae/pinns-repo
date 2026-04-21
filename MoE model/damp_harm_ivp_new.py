@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 import matplotlib.pyplot as plt
 from scipy.integrate import solve_ivp
-from network import MoEPINN, SoftAdapt
+from new_model import MoEPINN
 
 torch.manual_seed(0)
 
@@ -23,7 +23,7 @@ v0_true = torch.tensor([[v0]], dtype=torch.float32)
 
 #%%
 # MoE model: input is only t
-moe_model = MoEPINN(input_dim=1, output_dim=1, hidden=[32, 32], n_experts=3)
+moe_model = MoEPINN(in_dim=1, out_dim=1, num_experts=3, temperature=1)
 optimizer = torch.optim.Adam(moe_model.parameters(), lr=1e-3)
 
 #%%
@@ -39,10 +39,8 @@ sol = solve_ivp(f, t_span, [x0, v0], t_eval=t_eval)
 
 #%%
 # Training setup
-n_epoch = 20_000
-N = 800
-
-softadapt = SoftAdapt(beta=0.5)
+n_epoch = 20000
+N = 200
 
 loss_history = []
 
@@ -56,7 +54,7 @@ for epoch in range(n_epoch):
     t.requires_grad_(True)
 
     # forward
-    x_hat, gate_weights = moe_model(t)
+    x_hat, gate_weights, _, _ = moe_model(t)
 
     # first derivative
     v_hat = torch.autograd.grad(
@@ -79,7 +77,7 @@ for epoch in range(n_epoch):
     # initial conditions at t=0
     t_ic = torch.tensor([[t0]], dtype=torch.float32, requires_grad=True)
 
-    x_ic, _ = moe_model(t_ic)
+    x_ic, _, _, _ = moe_model(t_ic)
     v_ic = torch.autograd.grad(
         x_ic, t_ic,
         grad_outputs=torch.ones_like(x_ic),
@@ -88,24 +86,16 @@ for epoch in range(n_epoch):
 
     loss_ic = torch.mean((x_ic - x0_true)**2 + (v_ic - v0_true)**2)
 
-    # load-balancing loss
-    # mean_gate = torch.mean(gate_weights.squeeze(1), dim=0)
-    # target = torch.full_like(mean_gate, 1.0 / moe_model.n_experts)
-    # loss_balance = torch.mean((mean_gate - target)**2)
-
     # Load balancing consistent with project plan
-    mean_gate = torch.mean(gate_weights.squeeze(1), dim=0) 
-    K = moe_model.n_experts
-    loss_balance = K * torch.sum(mean_gate ** 2)
-
-    if epoch % 50 == 0:
-        weights = softadapt.get_weights([loss_ic, loss_balance])
+    # mean_gate = torch.mean(gate_weights.squeeze(1), dim=0) 
+    # K = moe_model.n_experts
+    # loss_balance = K * torch.sum(mean_gate ** 2)
 
     w_pde = 1.0
-    w_ic = weights[0]
-    w_balance = weights[1]
+    w_ic = 1.0
+    w_balance = 0.0
 
-    loss = w_pde * loss_pde + w_ic * loss_ic + w_balance * loss_balance
+    loss = w_pde * loss_pde + w_ic * loss_ic # + w_balance * loss_balance
 
     loss.backward()
     optimizer.step()
@@ -118,7 +108,7 @@ for epoch in range(n_epoch):
             f"loss={loss.item():.6e} "
             f"pde={loss_pde.item():.6e} "
             f"ic={loss_ic.item():.6e} "
-            f"bal={loss_balance.item():.6e}"
+            #f"bal={loss_balance.item():.6e}"
             f" w_pde={w_pde:.3f} w_ic={w_ic:.3f} w_bal={w_balance:.3f}"
         )
 
@@ -128,7 +118,7 @@ moe_model.eval()
 t_test = torch.linspace(t0, T, 2000).unsqueeze(1)
 
 with torch.no_grad():
-    x_pred, gate_pred = moe_model(t_test)
+    x_pred, gate_pred, _, _ = moe_model(t_test)
 
 #%%
 # Plot solution
@@ -145,8 +135,8 @@ plt.show()
 #%%
 # Plot gate responses
 plt.figure()
-for k in range(moe_model.n_experts):
-    plt.plot(t_test.numpy(), gate_pred[:, 0, k].numpy(), label=f"Expert {k+1}")
+for k in range(moe_model.num_experts):
+    plt.plot(t_test.numpy(), gate_pred[:, k].numpy(), label=f"Expert {k+1}")
 plt.xlabel("t")
 plt.ylabel("Gate weight")
 plt.title("Gate responses over time")

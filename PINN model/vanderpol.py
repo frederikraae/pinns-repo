@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 import matplotlib.pyplot as plt
 from scipy.integrate import solve_ivp
-from network import MoEPINN, SoftAdapt
+from network import MLP, SoftAdapt
 
 torch.manual_seed(0)
 
@@ -12,25 +12,24 @@ torch.manual_seed(0)
 # Parameters
 t0 = 0.0
 T = 20.0
-lam = 0.5
-w0 = 3.0
+mu = 5.0
 
-x0 = 1.0
+x0 = 2.0
 v0 = 0.0
 
 x0_true = torch.tensor([[x0]], dtype=torch.float32)
 v0_true = torch.tensor([[v0]], dtype=torch.float32)
 
 #%%
-# MoE model: input is only t
-moe_model = MoEPINN(input_dim=1, output_dim=1, hidden=[32, 32], n_experts=3)
-optimizer = torch.optim.Adam(moe_model.parameters(), lr=1e-3)
+# Initialize network and optimizer
+net = MLP(1,1,[32, 32])
+optimizer = torch.optim.Adam(net.parameters(), lr=1e-3)
 
 #%%
 # Numerical reference solution
 def f(t, y):
     x, v = y
-    a = -lam * v - w0**2 * x
+    a = mu * (1 - x**2) * v - x
     return [v, a]
 
 t_span = (t0, T)
@@ -39,47 +38,44 @@ sol = solve_ivp(f, t_span, [x0, v0], t_eval=t_eval)
 
 #%%
 # Training setup
-n_epoch = 20_000
+n_epoch = 15_000
 N = 800
-
 softadapt = SoftAdapt(beta=0.5)
-
 loss_history = []
 
-#%%
 for epoch in range(n_epoch):
 
     optimizer.zero_grad()
 
-    # collocation points in time
+    # Collocation points in time
     t = t0 + (T - t0) * torch.rand(N, 1)
     t.requires_grad_(True)
 
-    # forward
-    x_hat, gate_weights = moe_model(t)
+    # Forward pass
+    x_hat = net(t)
 
-    # first derivative
+    # First derivative
     v_hat = torch.autograd.grad(
         x_hat, t,
         grad_outputs=torch.ones_like(x_hat),
         create_graph=True
     )[0]
 
-    # second derivative
+    # Second derivative
     a_hat = torch.autograd.grad(
         v_hat, t,
         grad_outputs=torch.ones_like(v_hat),
         create_graph=True
     )[0]
 
-    # ODE residual: x'' + lam x' + w0^2 x = 0
-    residual = a_hat + lam * v_hat + w0**2 * x_hat
+    # ODE residual
+    residual = a_hat - mu * (1 - x_hat**2) * v_hat + x_hat
     loss_pde = torch.mean(residual**2)
 
-    # initial conditions at t=0
+    # Initial conditions at t=0
     t_ic = torch.tensor([[t0]], dtype=torch.float32, requires_grad=True)
 
-    x_ic, _ = moe_model(t_ic)
+    x_ic = net(t_ic)
     v_ic = torch.autograd.grad(
         x_ic, t_ic,
         grad_outputs=torch.ones_like(x_ic),
@@ -88,24 +84,16 @@ for epoch in range(n_epoch):
 
     loss_ic = torch.mean((x_ic - x0_true)**2 + (v_ic - v0_true)**2)
 
-    # load-balancing loss
-    # mean_gate = torch.mean(gate_weights.squeeze(1), dim=0)
-    # target = torch.full_like(mean_gate, 1.0 / moe_model.n_experts)
-    # loss_balance = torch.mean((mean_gate - target)**2)
+    # if epoch % 50 == 0:
+    #     weights = softadapt.get_weights([loss_pde, loss_ic])
 
-    # Load balancing consistent with project plan
-    mean_gate = torch.mean(gate_weights.squeeze(1), dim=0) 
-    K = moe_model.n_experts
-    loss_balance = K * torch.sum(mean_gate ** 2)
-
-    if epoch % 50 == 0:
-        weights = softadapt.get_weights([loss_ic, loss_balance])
+    # w_pde = weights[0]
+    # w_ic = weights[1]
 
     w_pde = 1.0
-    w_ic = weights[0]
-    w_balance = weights[1]
+    w_ic = 1.0
 
-    loss = w_pde * loss_pde + w_ic * loss_ic + w_balance * loss_balance
+    loss = w_pde * loss_pde + w_ic * loss_ic
 
     loss.backward()
     optimizer.step()
@@ -118,17 +106,16 @@ for epoch in range(n_epoch):
             f"loss={loss.item():.6e} "
             f"pde={loss_pde.item():.6e} "
             f"ic={loss_ic.item():.6e} "
-            f"bal={loss_balance.item():.6e}"
-            f" w_pde={w_pde:.3f} w_ic={w_ic:.3f} w_bal={w_balance:.3f}"
+            f" w_pde={w_pde:.3f} w_ic={w_ic:.3f}"
         )
 
 #%%
 # Evaluation
-moe_model.eval()
+net.eval()
 t_test = torch.linspace(t0, T, 2000).unsqueeze(1)
 
 with torch.no_grad():
-    x_pred, gate_pred = moe_model(t_test)
+    x_pred = net(t_test)
 
 #%%
 # Plot solution
@@ -143,23 +130,10 @@ plt.grid()
 plt.show()
 
 #%%
-# Plot gate responses
-plt.figure()
-for k in range(moe_model.n_experts):
-    plt.plot(t_test.numpy(), gate_pred[:, 0, k].numpy(), label=f"Expert {k+1}")
-plt.xlabel("t")
-plt.ylabel("Gate weight")
-plt.title("Gate responses over time")
-plt.legend()
-plt.grid()
-plt.show()
-
-#%%
 # Training loss
 loss_history = np.array(loss_history)
 window = 50
 loss_smooth = np.convolve(loss_history, np.ones(window)/window, mode="valid")
-
 plt.figure()
 plt.plot(loss_smooth)
 plt.yscale("log")

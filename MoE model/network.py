@@ -32,19 +32,26 @@ class MLP(nn.Module):
         return self.model(x)
 
 class MoEPINN(nn.Module):
-    def __init__(self, input_dim=1, output_dim=1, hidden=[100,100], n_experts=2):
+    def __init__(self, input_dim=1, output_dim=1, hidden=[100,100], n_experts=2, temperature=1):
         super().__init__()
 
         self.n_experts = n_experts
+        self.temperature = temperature
 
         # ---- Experts ----
         self.experts = nn.ModuleList([
-            MLP(input_size=input_dim, output_size=output_dim, hidden_layers=hidden)
-            for _ in range(n_experts)
-        ])
+            MLP(
+                input_size=input_dim, 
+                output_size=output_dim, 
+                hidden_layers=hidden
+                ) for _ in range(n_experts)])
 
         # ---- Gating network ----
-        self.gate = MLP(input_size=input_dim, output_size=n_experts, hidden_layers=hidden)
+        self.gate = MLP(
+            input_size=input_dim, 
+            output_size=n_experts, 
+            hidden_layers=[32,32]
+            )
 
         # ---- Initialise weights (Xavier) ----
         self._init_weights()
@@ -62,7 +69,7 @@ class MoEPINN(nn.Module):
 
         # ---- Gating weights ----
         gate_logits = self.gate(x)                                # (N,K)
-        gate_weights = torch.softmax(gate_logits, dim=1)          # (N,K)
+        gate_weights = torch.softmax(gate_logits / self.temperature, dim=1)          # (N,K)
         gate_weights = gate_weights.unsqueeze(1)                  # (N,1,K)
 
         # ---- Mixture ----
