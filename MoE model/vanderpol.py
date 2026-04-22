@@ -21,7 +21,7 @@ x0_true = torch.tensor([[x0]], dtype=torch.float32)
 v0_true = torch.tensor([[v0]], dtype=torch.float32)
 
 #%%
-# MoE model: input is only t
+# MoE model
 moe_model = MoEPINN(
     in_dim=1, 
     out_dim=1, 
@@ -106,9 +106,9 @@ for epoch in range(n_epoch):
     K = moe_model.num_experts
     loss_balance = K * torch.sum(mean_gate ** 2)
 
-    w_pde = 1.0 # weights[0]
-    w_ic = 1.0 # weights[1]
-    w_balance = 0.05 # weights[2]
+    w_pde = 1.0 
+    w_ic = 1.0 
+    w_balance = 0.05 
 
     loss = w_pde * loss_pde + w_ic * loss_ic + w_balance * loss_balance
 
