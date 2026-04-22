@@ -42,7 +42,7 @@ sol = solve_ivp(f, t_span, [x0, v0], t_eval=t_eval)
 n_epoch = 20_000
 N = 800
 
-softadapt = SoftAdapt(beta=0.5)
+softadapt = SoftAdapt(beta=0.2, Normalized=True, Loss_weighted=True)
 
 loss_history = []
 
@@ -98,12 +98,12 @@ for epoch in range(n_epoch):
     K = moe_model.n_experts
     loss_balance = K * torch.sum(mean_gate ** 2)
 
-    if epoch % 50 == 0:
+    if epoch % 2 == 0:
         weights = softadapt.get_weights([loss_ic, loss_balance])
 
-    w_pde = 1.0
-    w_ic = weights[0]
-    w_balance = weights[1]
+    w_pde = weights[0]
+    w_ic = weights[1]
+    w_balance = weights[2]
 
     loss = w_pde * loss_pde + w_ic * loss_ic + w_balance * loss_balance
 
