@@ -4,7 +4,6 @@ import numpy as np
 import torch
 import torch.nn as nn
 import matplotlib.pyplot as plt
-from scipy.integrate import solve_ivp, solve_bvp
 from new_model import MoEPINN, Expert
 from torch import sin, exp, pi
 

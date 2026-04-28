@@ -185,7 +185,7 @@ for rar_iter in range(n_rar_iter):
     )
     loss_history.extend(block_loss)
 
-    print(f"Outer itereaton: {rar_iter}. Loss={loss_history[-1]}")
+    print(f"Outer itereaton: {rar_iter}. Loss={loss_history[-1]:.6e}")
 
 #%%
 # Evaluation

@@ -39,8 +39,8 @@ sol = solve_ivp(f, t_span, [x0, v0], t_eval=t_eval)
 
 #%%
 # Training setup
-n_epoch = 20000
-N = 200
+n_epoch = 5000
+N = 800
 
 loss_history = []
 
