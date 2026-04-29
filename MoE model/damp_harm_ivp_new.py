@@ -35,7 +35,7 @@ sol = solve_ivp(f, t_span, [x0, v0], t_eval=t_eval)
 
 #%%
 # Initialize MoE model and define MoE-optimizer
-moe = moe = MoEPINN(
+moe = MoEPINN(
     in_dim=1,
     out_dim=1,
     num_experts=2,
@@ -81,6 +81,9 @@ window = 5
 loss_hist_1 = []
 loss_hist_2 = []
 loss_hist_3 = []
+
+loss_history_moe = []
+loss_history_pinn = []
 
 # initial weights before SoftAdapt can be computed
 w_pde, w_ic, w_balance = 1.0, 1.0, 1.0
@@ -130,7 +133,7 @@ for epoch in range(n_epoch):
 
     # Load balancing consistent with project plan
     mean_gate = torch.mean(gate_weights.squeeze(1), dim=0) 
-    K = moe_model.num_experts
+    K = moe.num_experts
     loss_balance = (1 - K * torch.sum(mean_gate ** 2))**2
 
     # save loss components
