@@ -21,14 +21,14 @@ u_ic_exact = lambda x: sin(2*pi*x)
 
 # Define spation range
 xa = 0.0
-xb = 1.0
+xb = 2.0
 
 # Define time range
 t0 = 0.0
-T = 1.0
+T = 2.0
 
 # Define initial points
-N_ic = 100
+N_ic = 1000
 
 x_ic = xa + (xb - xa) * torch.rand(N_ic, 1)
 t_ic = t0 * torch.ones_like(x_ic)
@@ -36,7 +36,7 @@ t_ic = t0 * torch.ones_like(x_ic)
 X_ic = torch.cat([x_ic, t_ic], dim=1)
 
 # Define boundary points
-N_bc = 100
+N_bc = 1000
 
 t_bc = t0 + (T - t0) * torch.rand(N_bc, 1)
 x_bc_a = xa * torch.ones_like(t_bc)
@@ -58,7 +58,7 @@ moe = MoEPINN(
     temperature=1.0
 )
 
-optimizer_moe = torch.optim.Adam(moe.parameters(), lr=1e-4)
+optimizer_moe = torch.optim.Adam(moe.parameters(), lr=1e-3)
 
 #%%
 # Initialize PINN model and optimizer
@@ -69,7 +69,7 @@ pinn = Expert(
     hidden_layers=3
 )
 
-optimizer_pinn = torch.optim.Adam(pinn.parameters(), lr=1e-4)
+optimizer_pinn = torch.optim.Adam(pinn.parameters(), lr=1e-3)
 
 #%%
 # Training setup
@@ -82,6 +82,11 @@ loss_history_pinn = []
 # Sobol sampling
 sobol_moe = torch.quasirandom.SobolEngine(dimension=2, scramble=True)
 sobol_pinn = torch.quasirandom.SobolEngine(dimension=2, scramble=True)
+
+# Loss weights
+w_pde = 10.0
+w_bc = 1.0
+w_ic = 100.0
 
 #%%
 # Training loop for MoE
@@ -120,7 +125,7 @@ for epoch in range(n_epoch):
     loss_ic = torch.mean((u_ic_hat - u_ic_true)**2)
 
     # Total loss
-    loss = loss_pde + loss_bc + loss_ic
+    loss = w_pde * loss_pde + w_bc * loss_bc + w_ic * loss_ic
 
     loss_history_moe.append(loss.item())
 
@@ -173,7 +178,7 @@ for epoch in range(n_epoch):
     loss_ic = torch.mean((u_ic - u_ic_true)**2)
 
     # Total loss
-    loss = loss_pde + loss_bc + loss_ic
+    loss = w_pde * loss_pde + w_bc * loss_bc + w_ic * loss_ic
 
     loss_history_pinn.append(loss.item())
 
@@ -205,6 +210,7 @@ with torch.no_grad():
     u_pred_pinn = pinn(XT_test)
     u_exact_test = u_exact(X_test, T_test)
 
+
 #%%
 # Prepare output for plotting (NumPy)
 Xn = X_test.numpy()
@@ -212,6 +218,8 @@ Tn = T_test.numpy()
 u_pred_moe_n = u_pred_moe.detach().numpy().reshape(Xn.shape)
 u_pred_pinn_n = u_pred_pinn.detach().numpy().reshape(Xn.shape)
 u_exact_test_n = u_exact_test.numpy()
+moe_residual_test = u_exact_test_n - u_pred_moe_n
+pinn_residual_test = u_exact_test_n - u_pred_pinn_n
 
 # Get levels for contour plot
 vmin = min(u_exact_test_n.min(), u_pred_moe_n.min())
@@ -220,28 +228,52 @@ levels = np.linspace(vmin, vmax, 30)
 
 #%%
 # Create figure
-fig, axes = plt.subplots(2, 2, figsize=(12,12), constrained_layout=True)
+fig, axes = plt.subplots(2, 3, figsize=(18,12), constrained_layout=True)
 
-# Exact
+# Exact 1. row
 exact_cont = axes[0, 0].contourf(Xn, Tn, u_exact_test_n, levels=levels)
 axes[0, 0].set_title("Exact solution")
 axes[0, 0].set_xlabel("x")
 axes[0, 0].set_ylabel("t")
-fig.colorbar(exact_cont, ax=axes[0,0])
+fig.colorbar(exact_cont, ax=axes[0, 0])
 
 # Prediction MoE
 pred_moe_cont = axes[0, 1].contourf(Xn, Tn, u_pred_moe_n, levels=levels)
 axes[0, 1].set_title("MoE-PINN predicition")
 axes[0, 1].set_xlabel("x")
 axes[0, 1].set_ylabel("t")
-fig.colorbar(pred_moe_cont, ax=axes[0,1])
+fig.colorbar(pred_moe_cont, ax=axes[0, 1])
 
-# Prediction PINN
-pred_moe_cont = axes[1, 0].contourf(Xn, Tn, u_pred_pinn_n, levels=levels)
-axes[1, 0].set_title("PINN predicition")
+# MoE residual
+moe_residual_cont = axes[0, 2].contourf(Xn, Tn, moe_residual_test, cmap="Oranges")
+axes[0, 2].set_title("MoE residuals")
+axes[0, 2].set_xlabel("x")
+axes[0, 2].set_ylabel("t")
+fig.colorbar(moe_residual_cont, ax=axes[0, 2])
+
+# Exact 2. row
+exact_cont = axes[1, 0].contourf(Xn, Tn, u_exact_test_n, levels=levels)
+axes[1, 0].set_title("Exact solution")
 axes[1, 0].set_xlabel("x")
 axes[1, 0].set_ylabel("t")
-fig.colorbar(pred_moe_cont, ax=axes[1,0])
+fig.colorbar(exact_cont, ax=axes[1, 0])
+
+# Prediction PINN
+pred_pinn_cont = axes[1, 1].contourf(Xn, Tn, u_pred_pinn_n, levels=levels)
+axes[1, 1].set_title("PINN predicition")
+axes[1, 1].set_xlabel("x")
+axes[1, 1].set_ylabel("t")
+fig.colorbar(pred_pinn_cont, ax=axes[1, 1])
+
+# PINN residual
+pinn_residual_cont = axes[1, 2].contourf(Xn, Tn, pinn_residual_test, cmap="Oranges")
+axes[1, 2].set_title("PINN residuals")
+axes[1, 2].set_xlabel("x")
+axes[1, 2].set_ylabel("t")
+fig.colorbar(pinn_residual_cont, ax=axes[1, 2])
+
+plt.show()
+
 
 #%%
 # Plot training loss for MoE
@@ -254,6 +286,7 @@ plt.yscale("log")
 plt.xlabel("Epoch")
 plt.ylabel("Loss")
 plt.title("Training loss")
+plt.legend()
 plt.grid()
 plt.show()
 
@@ -262,9 +295,9 @@ plt.show()
 gw = gate_pred.detach().numpy()   # (10000, 3)
 levels = np.linspace(0,1,50)
 
-fig, axes = plt.subplots(1, 3, figsize=(15, 4), constrained_layout=True)
+fig, axes = plt.subplots(1, moe.num_experts, figsize=(15, 4), constrained_layout=True)
 
-for k in range(3):
+for k in range(moe.num_experts):
     gw_k = gw[:, k].reshape(Xn.shape)
     cont = axes[k].contourf(Xn, Tn, gw_k, levels=levels)
     axes[k].set_title(f"Gate weight - Expert {k}")
