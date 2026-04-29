@@ -137,3 +137,7 @@ plt.title("Training loss")
 plt.grid()
 plt.show()
 # %%
+
+# np.savez("base.npz", t_base=t_test.numpy(), x_base=x_pred.numpy(), l_base=loss_history)
+
+# np.savez("true.npz", t_true=t_test.numpy(), x_true=x_pred.numpy())

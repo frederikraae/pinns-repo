@@ -231,3 +231,5 @@ plt.ylabel("Count")
 plt.title("Histogram of collocation point from adaptive sampling")
 plt.grid(True)
 plt.show()
+
+# np.savez("rar.npz", t_rar=t_test.numpy(), x_rar=x_pred.numpy(), l_rar=loss_history)
