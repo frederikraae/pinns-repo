@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 import matplotlib.pyplot as plt
 from scipy.integrate import solve_ivp
-from network import MLP, SoftAdapt
+from network import PINN
 
 torch.manual_seed(0)
 
@@ -22,7 +22,7 @@ v0_true = torch.tensor([[v0]], dtype=torch.float32)
 
 #%%
 # Initialize network and optimizer
-net = MLP(1,1,[32, 32])
+net = PINN(in_dim=1, out_dim=1, hidden_dim=64, hidden_layers=2)
 optimizer = torch.optim.Adam(net.parameters(), lr=1e-3)
 
 #%%
@@ -38,9 +38,9 @@ sol = solve_ivp(f, t_span, [x0, v0], t_eval=t_eval)
 
 #%%
 # Training setup
-n_epoch = 15_000
+n_epoch = 10_000
 N = 800
-softadapt = SoftAdapt(beta=0.5)
+
 loss_history = []
 
 for epoch in range(n_epoch):
@@ -84,14 +84,8 @@ for epoch in range(n_epoch):
 
     loss_ic = torch.mean((x_ic - x0_true)**2 + (v_ic - v0_true)**2)
 
-    # if epoch % 50 == 0:
-    #     weights = softadapt.get_weights([loss_pde, loss_ic])
-
-    # w_pde = weights[0]
-    # w_ic = weights[1]
-
     w_pde = 1.0
-    w_ic = 1.0
+    w_ic = 10.0
 
     loss = w_pde * loss_pde + w_ic * loss_ic
 
@@ -100,7 +94,7 @@ for epoch in range(n_epoch):
 
     loss_history.append(loss.item())
 
-    if epoch % 1000 == 0:
+    if epoch % 500 == 0:
         print(
             f"epoch: {epoch:5d} "
             f"loss={loss.item():.6e} "
@@ -121,10 +115,10 @@ with torch.no_grad():
 # Plot solution
 plt.figure()
 plt.plot(sol.t, sol.y[0], label="solve_ivp")
-plt.plot(t_test.numpy(), x_pred.numpy(), "--", label="MoE-PINN")
+plt.plot(t_test.numpy(), x_pred.numpy(), "--", label="PINN")
 plt.xlabel("t")
 plt.ylabel("x(t)")
-plt.title("Damped harmonic oscillator")
+plt.title("Van der Pol oscillator")
 plt.legend()
 plt.grid()
 plt.show()
