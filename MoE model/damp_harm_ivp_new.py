@@ -5,6 +5,7 @@ import torch.nn as nn
 import matplotlib.pyplot as plt
 from scipy.integrate import solve_ivp
 from new_model import MoEPINN, Expert
+from softadapt import SoftAdapt, NormalizedSoftAdapt, LossWeightedSoftAdapt
 
 torch.manual_seed(0)
 
@@ -68,11 +69,21 @@ def datatransform(t, l_fun=[torch.cos, torch.sin], l_freq=[1.0, 2.0, 4.0, 8.0, 1
 
 #%%
 # Training setup
-n_epoch = 20000
-N = 4000
+softadapt_object  = LossWeightedSoftAdapt(beta=0.2)
 
-loss_history_moe = []
-loss_history_pinn = []
+n_epoch = 10_000
+N = 800
+
+loss_history = []
+
+window = 5
+
+loss_hist_1 = []
+loss_hist_2 = []
+loss_hist_3 = []
+
+# initial weights before SoftAdapt can be computed
+w_pde, w_ic, w_balance = 1.0, 1.0, 1.0
 
 #%%
 # Training loop for MoE
@@ -118,13 +129,22 @@ for epoch in range(n_epoch):
     loss_ic = torch.mean((x_ic - x0_true)**2 + (v_ic - v0_true)**2)
 
     # Load balancing consistent with project plan
-    # mean_gate = torch.mean(gate_weights.squeeze(1), dim=0) 
-    # K = moe_model.n_experts
-    # loss_balance = K * torch.sum(mean_gate ** 2)
+    mean_gate = torch.mean(gate_weights.squeeze(1), dim=0) 
+    K = moe_model.num_experts
+    loss_balance = (1 - K * torch.sum(mean_gate ** 2))**2
 
-    w_pde = 1.0
-    w_ic = 1.0
-    w_balance = 0.0
+    # save loss components
+    loss_hist_1.append(loss_pde.item())
+    loss_hist_2.append(loss_ic.item())
+    loss_hist_3.append(loss_balance.item())
+
+    if epoch >= window and epoch % window == 0:
+        weights = softadapt_object.get_component_weights(
+            torch.tensor(loss_hist_1[-window:], dtype=torch.float32),
+            torch.tensor(loss_hist_2[-window:], dtype=torch.float32),
+            torch.tensor(loss_hist_3[-window:], dtype=torch.float32)
+        )
+        w_pde, w_ic, w_balance = [w.item() for w in weights]
 
     loss = w_pde * loss_pde + w_ic * loss_ic # + w_balance * loss_balance
 
@@ -133,13 +153,13 @@ for epoch in range(n_epoch):
 
     loss_history_moe.append(loss.item())
 
-    if epoch % 1000 == 0:
+    if epoch % 200 == 0:
         print(
             f"epoch: {epoch:5d} "
             f"loss={loss.item():.6e} "
             f"pde={loss_pde.item():.6e} "
             f"ic={loss_ic.item():.6e} "
-            #f"bal={loss_balance.item():.6e}"
+            f"bal={loss_balance.item():.6e}"
             f" w_pde={w_pde:.3f} w_ic={w_ic:.3f} w_bal={w_balance:.3f}"
         )
 #%%
