@@ -2,14 +2,21 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 base = np.load("base.npz")
+true = np.load("true.npz")
 softa = np.load("softa.npz")
 rar = np.load("rar.npz")
 data = np.load("data.npz")
+moe_base = np.load("moe_base.npz")
 
 # Plot solution
 plt.figure()
-plt.plot(sol.t, sol.y[0], label="solve_ivp")
-plt.plot(t_test.numpy(), x_pred.numpy(), "--", label="PINN")
+plt.plot(base["t"], base["x"], label="base")
+plt.plot(true["t"], true["x"], label="true")
+# plt.plot(softa["t"], softa["x"], "--", label="SoftAdapt")
+# plt.plot(rar["t"], rar["x"], "--", label="RAR")
+plt.plot(data["t"], data["x"], "--", label="with data")
+plt.plot(data["dpt"], data["dpx"], "ro", label="Datapoints")
+# plt.plot(moe_base["t"], moe_base["x"], "--", label="MoE-PINN")
 plt.xlabel("t")
 plt.ylabel("x(t)")
 plt.title("Van der Pol oscillator")
@@ -19,14 +26,17 @@ plt.show()
 
 #%%
 # Training loss
-loss_history = np.array(loss_history)
-window = 50
-loss_smooth = np.convolve(loss_history, np.ones(window)/window, mode="valid")
-plt.figure()
-plt.plot(loss_smooth)
-plt.yscale("log")
-plt.xlabel("Epoch")
-plt.ylabel("Loss")
-plt.title("Training loss")
-plt.grid()
-plt.show()
+# window = 50
+# loss_smooth = np.convolve(base["l"], np.ones(window)/window, mode="valid")
+# loss_smooth_data = np.convolve(data["l"], np.ones(window)/window, mode="valid")
+# plt.figure()
+# plt.plot(loss_smooth, label="base")
+# plt.plot(loss_smooth_data, label="with data")
+# plt.yscale("log")
+# plt.xlabel("Epoch")
+# plt.ylabel("Loss")
+# plt.title("Training loss")
+# plt.grid()
+# plt.show()
+
+# %%

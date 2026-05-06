@@ -157,4 +157,6 @@ plt.grid()
 plt.show()
 # %%
 
-# np.savez("softa.npz", t_softa=t_test.numpy(), x_softa=x_pred.numpy(), l_softa=loss_history)
+np.savez("softa.npz", t=t_test.numpy(), x=x_pred.numpy(), l=loss_history)
+
+# %%

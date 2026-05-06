@@ -138,6 +138,8 @@ plt.grid()
 plt.show()
 # %%
 
-# np.savez("base.npz", t_base=t_test.numpy(), x_base=x_pred.numpy(), l_base=loss_history)
+# np.savez("base.npz", t=t_test.numpy(), x=x_pred.numpy(), l=loss_history)
 
-# np.savez("true.npz", t_true=t_test.numpy(), x_true=x_pred.numpy())
+# np.savez("true.npz", t=sol.t, x=sol.y[0])
+
+# %%

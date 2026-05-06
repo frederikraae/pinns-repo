@@ -18,4 +18,5 @@ optimizer = torch.optim.Adam(net.parameters(), lr=1e-3)
 # Loss term
 w_pde = 1.0
 w_ic = 10.0
-w_data = 3.0
+w_data = 20.0
+w_balance = 0.05 

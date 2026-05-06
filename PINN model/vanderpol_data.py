@@ -104,8 +104,8 @@ for epoch in range(n_epoch):
     loss_data = torch.mean((x_data_hat - data)**2)
 
     w_pde = 1.0
-    w_data = 3.0
     w_ic = 10.0
+    w_data = 20.0
 
     loss = w_pde * loss_pde + w_data * loss_data + w_ic * loss_ic
 
@@ -159,4 +159,4 @@ plt.grid()
 plt.show()
 # %%
 
-# np.savez("data.npz", t_data=t_test.numpy(), x_data=x_pred.numpy(), dpx_data=data.numpy(), dpt_data=data_t.numpy(), l_data=loss_history)
+# np.savez("data.npz", t=t_test.numpy(), x=x_pred.numpy(), dpx=data.numpy(), dpt=data_t.numpy(), l=loss_history)
