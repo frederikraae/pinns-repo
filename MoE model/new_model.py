@@ -135,12 +135,14 @@ class MoEPINN(nn.Module):
         return u_hat, gate_weights, gate_logits, expert_outputs
     
 
-class Sampling():
-    pass
+# ========== HELPER FUNCTIONS ===========
 
-
-
-
+def positionalencoder(t, l_fun=[torch.cos, torch.sin], l_freq=[1/4, 1/2, 1.0, 3/2, 2.0]):
+    t_trans = t
+    for fun in l_fun:
+        for freq in l_freq:
+            t_trans = torch.cat([t_trans, fun(2*torch.pi*freq*t)], dim=1)
+    return t_trans
 
 
 # ========== DIAGNOSTICS ===========
@@ -162,4 +164,6 @@ def vdp_residual(model, t, mu):
 
     R = x_tt - mu * (1 - x**2) * x_t + x
     return R
+
+
 
