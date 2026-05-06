@@ -1,0 +1,64 @@
+No GPU on this node, CUDA module not loaded
+--- Running 50 seeds with 8 processes ---
+
+N = 50 seeds
+Elapsed: 1141.90 s
+Per seed: 22.84 s
+Saved moe2dpos.npz
+
+------------------------------------------------------------
+Sender: LSF System <lsfadmin@hpc.dtu.dk>
+Subject: Job 28376797: <moe_hpc> in cluster <dcc> Done
+
+Job <moe_hpc> was submitted from host <n-62-27-18> by user <s213935> in cluster <dcc> at Wed May  6 22:17:49 2026
+Job was executed on host(s) <8*n-62-31-16>, in queue <hpc>, as user <s213935> in cluster <dcc> at Wed May  6 22:17:50 2026
+</zhome/15/6/166811> was used as the home directory.
+</zhome/15/6/166811/Documents/pinns-repo/MoE model> was used as the working directory.
+Started at Wed May  6 22:17:50 2026
+Terminated at Wed May  6 22:37:42 2026
+Results reported at Wed May  6 22:37:42 2026
+
+Your job looked like:
+
+------------------------------------------------------------
+# LSBATCH: User input
+#!/bin/bash
+#BSUB -J moe_hpc
+#BSUB -q hpc
+#BSUB -n 8
+#BSUB -W 01:00
+#BSUB -R "span[hosts=1]"
+#BSUB -R "rusage[mem=500MB]"
+#BSUB -o moe_hpc_%J.out
+#BSUB -e moe_hpc_%J.err
+
+
+source /dtu/projects/02613_2025/conda/conda_init.sh
+conda activate PINN
+
+python -u HPCpoisson2dMoE.py 8 50
+------------------------------------------------------------
+
+Successfully completed.
+
+Resource usage summary:
+
+    CPU time :                                   8239.86 sec.
+    Max Memory :                                 2837 MB
+    Average Memory :                             2060.55 MB
+    Total Requested Memory :                     4000.00 MB
+    Delta Memory :                               1163.00 MB
+    Max Swap :                                   -
+    Max Processes :                              12
+    Max Threads :                                16
+    Run time :                                   1192 sec.
+    Turnaround time :                            1193 sec.
+
+The output (if any) is above this job summary.
+
+
+
+PS:
+
+Read file <moe_hpc_28376797.err> for stderr output of this job.
+

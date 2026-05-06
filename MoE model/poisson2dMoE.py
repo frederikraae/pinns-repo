@@ -1,4 +1,3 @@
-# %%
 import numpy as np
 import torch
 import torch.nn as nn
@@ -136,7 +135,6 @@ for epoch in range(n_epoch):
         )
 
 
-# %%
 # Evaluation
 n_test = 1000
 
@@ -217,7 +215,6 @@ fig.colorbar(cf3, ax=axes[2])
 
 plt.show()
 
-# %%
 plt.figure(figsize=(8, 5))
 
 plt.semilogy(loss_history, label="Total loss")
