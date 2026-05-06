@@ -60,7 +60,7 @@ optimizer_pinn = torch.optim.Adam(pinn.parameters(), lr=1e-3)
 
 #%%
 # Define data transformer
-def datatransform(t, l_fun=[torch.cos, torch.sin], l_freq=[1.0, 2.0, 4.0, 8.0, 16.0]):
+def positionalencoder(t, l_fun=[torch.cos, torch.sin], l_freq=[1.0, 2.0, 4.0, 8.0, 16.0]):
     t_trans = t
     for fun in l_fun:
         for freq in l_freq:
@@ -87,6 +87,8 @@ loss_history_pinn = []
 
 # initial weights before SoftAdapt can be computed
 w_pde, w_ic, w_balance = 1.0, 1.0, 1.0
+
+l_freq = [1/4, 1/2, 1.0, 3/2, 2.0]
 
 #%%
 # Training loop for MoE
@@ -173,7 +175,7 @@ for epoch in range(n_epoch):
     # Sample collocation points
     t = t0 + (T - t0) * torch.rand(N, 1)
     t.requires_grad_(True)
-    t_enc = datatransform(t)
+    t_enc = positionalencoder(t, l_freq=l_freq)
 
     # Forward pass
     x_hat = pinn(t_enc)
@@ -197,7 +199,7 @@ for epoch in range(n_epoch):
 
     # IC loss
     t_ic = torch.tensor([[t0]], dtype=torch.float32, requires_grad=True)
-    t_ic_enc = datatransform(t_ic)
+    t_ic_enc = positionalencoder(t_ic, l_freq=l_freq)
 
     x_ic = pinn(t_ic_enc)
     v_ic = torch.autograd.grad(
@@ -208,8 +210,8 @@ for epoch in range(n_epoch):
 
     loss_ic = torch.mean((x_ic - x0_true)**2 + (v_ic - v0_true)**2)
 
-    w_pde = 100.0
-    w_ic = 1000.0
+    w_pde = 10.0
+    w_ic = 100.0
 
     loss = w_pde * loss_pde + w_ic * loss_ic
 
@@ -233,7 +235,7 @@ N_test = 2000
 moe.eval()
 pinn.eval()
 t_test1 = torch.linspace(t0, T, N_test).unsqueeze(1)
-t_test2 = datatransform(t_test1)
+t_test2 = positionalencoder(t_test1, l_freq=l_freq)
 
 with torch.no_grad():
     x_pred_moe, gate_pred, _, _ = moe(t_test1)
@@ -257,7 +259,7 @@ plt.show()
 loss_history_moe = np.array(loss_history_moe)
 loss_history_pinn = np.array(loss_history_pinn)
 plt.figure()
-plt.plot(loss_history_moe, color="orange", label="MoE-PINN")
+# plt.plot(loss_history_moe, color="orange", label="MoE-PINN")
 plt.plot(loss_history_pinn, color="green", label="PINN")
 plt.yscale("log")
 plt.xlabel("Epoch")
