@@ -282,4 +282,4 @@ plt.show()
 
 #%%
 
-np.savez("moe_base.npz", t=t_test.numpy(), x=x_pred.numpy(), l=loss_history)
+# np.savez("moe_base.npz", t=t_test.numpy(), x=x_pred.numpy(), l=loss_history)

@@ -1,9 +1,10 @@
+# %%
 import numpy as np
 import torch
 import torch.nn as nn
-from torch.utils.data import TensorDataset, DataLoader, random_split
 import matplotlib.pyplot as plt
-from network import PINN
+from scipy.integrate import solve_ivp, solve_bvp
+from new_model import MoEPINN, Expert
 from torch import sin, exp, pi
 
 torch.manual_seed(1)
@@ -39,17 +40,21 @@ X_top = torch.cat([x,y], dim=1) # x ∈ [0, l], y = l
 
 X_boundary = torch.cat([X_left, X_right, X_bottom, X_top], dim=0)
 
-# Initialize network and define optimizer
-net = PINN(
+# Initialize MoE and define MoE-optimizer
+moe = MoEPINN(
     in_dim=2,
     out_dim=1,
-    hidden_dim=32,
-    hidden_layers=4
+    num_experts=2,
+    expert_hidden_dim=32,
+    expert_hidden_layers=2,
+    gate_hidden_dim=16,
+    gate_hidden_layers=2
 )
 
-optimizer = torch.optim.Adam(net.parameters(), lr=1e-3)
+optimizer = torch.optim.Adam(moe.parameters(), lr=1e-3)
 
 lam_bc = 10.0
+lam_bal = 0.05
 
 # Training loop
 n_epoch = 10_000
@@ -60,6 +65,8 @@ loss_history = []
 loss_pde_history = []
 loss_bc_history = []
 
+# %%
+
 for epoch in range(n_epoch):
     optimizer.zero_grad()
 
@@ -69,7 +76,8 @@ for epoch in range(n_epoch):
 
     X.requires_grad_(True)
 
-    u = net(X)
+    # Forward pass
+    u, gate_weights, _, _ = moe(X)
 
     # Computes Laplacian of u
     grad_u = torch.autograd.grad(
@@ -100,12 +108,17 @@ for epoch in range(n_epoch):
     loss_pde = torch.mean((laplace_u - f_val)**2)
 
     # BC loss
-    u_bc = net(X_boundary)
+    u_bc, _, _, _ = moe(X_boundary)
     u_true_bc = u_chos(X_boundary[:,0:1], X_boundary[:,1:2])
     loss_bc = torch.mean((u_bc - u_true_bc)**2)
 
+    # Load balancing consistent with project plan
+    mean_gate = torch.mean(gate_weights.squeeze(1), dim=0) 
+    K = moe.num_experts
+    loss_balance = K * torch.sum(mean_gate ** 2)
+
     # Total loss
-    loss = loss_pde + lam_bc * loss_bc
+    loss = loss_pde + lam_bc * loss_bc + lam_bal * loss_balance
 
     loss_history.append(loss.item())
     loss_pde_history.append(loss_pde.item())
@@ -122,6 +135,8 @@ for epoch in range(n_epoch):
             f"bc={loss_bc.item():.6e}"
         )
 
+
+# %%
 # Evaluation
 n_test = 1000
 
@@ -135,10 +150,10 @@ XY = torch.cat(
     dim=1
 )
 
-net.eval()
+moe.eval()
 
 with torch.no_grad():
-    u_pred = net(XY)
+    u_pred, _, _, _ = moe(XY)
     u_exact = u_chos(XY[:,0:1], XY[:,1:2])
 
 u_pred = u_pred.reshape(n_test, n_test)
@@ -160,6 +175,8 @@ levels = np.linspace(vmin, vmax, 30)
 
 # Separate symmetric scale for error
 err_max = np.max(np.abs(error_n))
+err_levels = np.linspace(-err_max, err_max, 30)
+
 fig, axes = plt.subplots(1, 3, figsize=(15, 4), constrained_layout=True)
 
 # Exact
@@ -171,7 +188,7 @@ fig.colorbar(cf1, ax=axes[0])
 
 # Prediction
 cf2 = axes[1].contourf(Xn, Yn, u_pred_n, levels=levels)
-axes[1].set_title("PINN prediction")
+axes[1].set_title("MoE prediction")
 axes[1].set_xlabel("x")
 axes[1].set_ylabel("y")
 fig.colorbar(cf2, ax=axes[1])
@@ -200,6 +217,7 @@ fig.colorbar(cf3, ax=axes[2])
 
 plt.show()
 
+# %%
 plt.figure(figsize=(8, 5))
 
 plt.semilogy(loss_history, label="Total loss")
@@ -212,33 +230,3 @@ plt.title("Training loss")
 plt.legend()
 plt.grid(True)
 plt.show()
-
-# fig = plt.figure()
-# ax = fig.add_subplot(111, projection='3d')
-
-# # Exact solution (blue)
-# ax.plot_surface(
-#     X.numpy(),
-#     Y.numpy(),
-#     u_exact.numpy(),
-#     color="blue",
-#     alpha=0.7,
-#     linewidth=0
-# )
-
-# # PINN prediction (red)
-# ax.plot_surface(
-#     X.numpy(),
-#     Y.numpy(),
-#     u_pred.numpy(),
-#     color="red",
-#     alpha=0.7,
-#     linewidth=0
-# )
-
-# ax.set_title("PINN vs Exact Solution")
-# ax.set_xlabel("x")
-# ax.set_ylabel("y")
-# ax.set_zlabel("u(x,y)")
-
-# plt.show()
