@@ -59,7 +59,7 @@ optimizer_pinn = torch.optim.Adam(pinn.parameters(), lr=1e-3)
 
 #%%
 # Training setup
-n_epoch = 20000
+n_epoch = 10_000
 N = 800
 
 loss_history_moe = []
@@ -120,7 +120,7 @@ for epoch in range(n_epoch):
     loss_balance = K * torch.sum(mean_gate ** 2)
 
     w_pde = 1.0 
-    w_ic = 1.0 
+    w_ic = 10.0 
     w_balance = 0.05 
 
     loss = w_pde * loss_pde + w_ic * loss_ic + w_balance * loss_balance
@@ -280,4 +280,6 @@ plt.show()
 # plt.grid(True)
 # plt.show()
 
-# #%%
+#%%
+
+np.savez("moe_base.npz", t=t_test.numpy(), x=x_pred.numpy(), l=loss_history)

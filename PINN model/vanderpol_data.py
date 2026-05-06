@@ -36,6 +36,21 @@ t_span = (t0, T)
 t_eval = np.linspace(t0, T, 10000)
 sol = solve_ivp(f, t_span, [x0, v0], t_eval=t_eval)
 
+# Data points with noise
+np.random.seed(0)
+
+k = 10 # number of data points
+
+N = len(sol.t)
+# idx = np.random.choice(N, size=k, replace=False)
+idx = np.linspace(0, N-1, k, dtype=int) # evenly spaced data points
+
+data = torch.tensor(sol.y[0, idx], dtype=torch.float32).unsqueeze(1)
+data_t = torch.tensor(sol.t[idx], dtype=torch.float32).unsqueeze(1)
+
+# add noise
+noise_std = 0.05
+data = data + noise_std * torch.randn_like(data)
 #%%
 # Training setup
 n_epoch = 10_000
@@ -84,10 +99,15 @@ for epoch in range(n_epoch):
 
     loss_ic = torch.mean((x_ic - x0_true)**2 + (v_ic - v0_true)**2)
 
+    # Data loss
+    x_data_hat = net(data_t)
+    loss_data = torch.mean((x_data_hat - data)**2)
+
     w_pde = 1.0
     w_ic = 10.0
+    w_data = 20.0
 
-    loss = w_pde * loss_pde + w_ic * loss_ic
+    loss = w_pde * loss_pde + w_data * loss_data + w_ic * loss_ic
 
     loss.backward()
     optimizer.step()
@@ -100,7 +120,7 @@ for epoch in range(n_epoch):
             f"loss={loss.item():.6e} "
             f"pde={loss_pde.item():.6e} "
             f"ic={loss_ic.item():.6e} "
-            f" w_pde={w_pde:.3f} w_ic={w_ic:.3f}"
+            f"data={loss_data.item():.6e} "
         )
 
 #%%
@@ -116,6 +136,7 @@ with torch.no_grad():
 plt.figure()
 plt.plot(sol.t, sol.y[0], label="solve_ivp")
 plt.plot(t_test.numpy(), x_pred.numpy(), "--", label="PINN")
+plt.plot(data_t.numpy(), data.numpy(), "ro", label="Data")
 plt.xlabel("t")
 plt.ylabel("x(t)")
 plt.title("Van der Pol oscillator")
@@ -138,8 +159,4 @@ plt.grid()
 plt.show()
 # %%
 
-# np.savez("base.npz", t=t_test.numpy(), x=x_pred.numpy(), l=loss_history)
-
-# np.savez("true.npz", t=sol.t, x=sol.y[0])
-
-# %%
+# np.savez("data.npz", t=t_test.numpy(), x=x_pred.numpy(), dpx=data.numpy(), dpt=data_t.numpy(), l=loss_history)

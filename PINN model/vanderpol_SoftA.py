@@ -5,6 +5,7 @@ import torch.nn as nn
 import matplotlib.pyplot as plt
 from scipy.integrate import solve_ivp
 from network import PINN
+from softadapt import SoftAdapt, NormalizedSoftAdapt, LossWeightedSoftAdapt
 
 torch.manual_seed(0)
 
@@ -38,6 +39,15 @@ sol = solve_ivp(f, t_span, [x0, v0], t_eval=t_eval)
 
 #%%
 # Training setup
+softadapt_object = LossWeightedSoftAdapt(beta=0.2)
+
+window = 5
+loss_hist_1 = []
+loss_hist_2 = []
+
+w_pde = 1.0
+w_ic = 10.0
+
 n_epoch = 10_000
 N = 800
 
@@ -84,8 +94,16 @@ for epoch in range(n_epoch):
 
     loss_ic = torch.mean((x_ic - x0_true)**2 + (v_ic - v0_true)**2)
 
-    w_pde = 1.0
-    w_ic = 10.0
+    # save loss components
+    loss_hist_1.append(loss_pde.item())
+    loss_hist_2.append(loss_ic.item())
+
+    if epoch >= window and epoch % window == 0:
+        weights = softadapt_object.get_component_weights(
+            torch.tensor(loss_hist_1[-window:], dtype=torch.float32),
+            torch.tensor(loss_hist_2[-window:], dtype=torch.float32)
+        )
+        w_pde, w_ic = [w.item() for w in weights]
 
     loss = w_pde * loss_pde + w_ic * loss_ic
 
@@ -100,6 +118,7 @@ for epoch in range(n_epoch):
             f"loss={loss.item():.6e} "
             f"pde={loss_pde.item():.6e} "
             f"ic={loss_ic.item():.6e} "
+            f" w_pde={w_pde:.3f} w_ic={w_ic:.3f}"
             f" w_pde={w_pde:.3f} w_ic={w_ic:.3f}"
         )
 
@@ -138,8 +157,6 @@ plt.grid()
 plt.show()
 # %%
 
-# np.savez("base.npz", t=t_test.numpy(), x=x_pred.numpy(), l=loss_history)
-
-# np.savez("true.npz", t=sol.t, x=sol.y[0])
+np.savez("softa.npz", t=t_test.numpy(), x=x_pred.numpy(), l=loss_history)
 
 # %%

@@ -4,7 +4,8 @@ import torch
 import torch.nn as nn
 import matplotlib.pyplot as plt
 from scipy.integrate import solve_ivp
-from network import MoEPINN, SoftAdapt
+from network import MoEPINN
+from softadapt import SoftAdapt, NormalizedSoftAdapt, LossWeightedSoftAdapt
 
 torch.manual_seed(0)
 
@@ -39,12 +40,22 @@ sol = solve_ivp(f, t_span, [x0, v0], t_eval=t_eval)
 
 #%%
 # Training setup
-n_epoch = 20_000
+n_epoch = 5_000
 N = 800
 
-softadapt = SoftAdapt(beta=0.2, Normalized=True, Loss_weighted=True)
+softadapt_object  = NormalizedSoftAdapt(beta=0.5)
 
 loss_history = []
+
+window = 5
+
+loss_hist_1 = []
+loss_hist_2 = []
+loss_hist_3 = []
+
+# initial weights before SoftAdapt can be computed
+w_pde, w_ic, w_balance = 1.0, 1.0, 1.0
+
 
 #%%
 for epoch in range(n_epoch):
@@ -98,12 +109,18 @@ for epoch in range(n_epoch):
     K = moe_model.n_experts
     loss_balance = K * torch.sum(mean_gate ** 2)
 
-    if epoch % 2 == 0:
-        weights = softadapt.get_weights([loss_ic, loss_balance])
+   # save loss components
+    loss_hist_1.append(loss_pde.item())
+    loss_hist_2.append(loss_ic.item())
+    loss_hist_3.append(loss_balance.item())
 
-    w_pde = weights[0]
-    w_ic = weights[1]
-    w_balance = weights[2]
+    if epoch >= window and epoch % window == 0:
+        weights = softadapt_object.get_component_weights(
+            torch.tensor(loss_hist_1[-window:], dtype=torch.float32),
+            torch.tensor(loss_hist_2[-window:], dtype=torch.float32),
+            torch.tensor(loss_hist_3[-window:], dtype=torch.float32)
+        )
+        w_pde, w_ic, w_balance = [w.item() for w in weights]
 
     loss = w_pde * loss_pde + w_ic * loss_ic + w_balance * loss_balance
 
@@ -112,7 +129,7 @@ for epoch in range(n_epoch):
 
     loss_history.append(loss.item())
 
-    if epoch % 1000 == 0:
+    if epoch % 500 == 0:
         print(
             f"epoch: {epoch:5d} "
             f"loss={loss.item():.6e} "
