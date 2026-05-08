@@ -4,7 +4,7 @@
 #BSUB -n 8
 #BSUB -W 01:00
 #BSUB -R "span[hosts=1]"
-#BSUB -R "rusage[mem=500MB]"
+#BSUB -R "rusage[mem=750MB]"
 #BSUB -o pinn_hpc_%J.out
 #BSUB -e pinn_hpc_%J.err
 

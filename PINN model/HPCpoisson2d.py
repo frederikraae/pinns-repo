@@ -121,7 +121,7 @@ def run_seed(seed):
     net.eval()
 
     with torch.no_grad():
-        u_pred, _, _, _ = net(XY)
+        u_pred = net(XY)
         u_exact = u_chos(XY[:, 0:1], XY[:, 1:2])
 
     u_pred = u_pred.reshape(n_test, n_test)
@@ -139,13 +139,13 @@ def run_seed(seed):
     }
 
 if __name__ == "__main__":
-    NUMBER_OF_SEEDS = int(sys.argv[1])
+    max_procs = int(sys.argv[1]) if len(sys.argv) > 1 else int(
+        os.environ.get("SLURM_CPUS_PER_TASK", mp.cpu_count())
+    )
 
-    max_procs = int(sys.argv[1]) if len(sys.argv) > 1 else int(os.environ.get("SLURM_CPUS_PER_TASK", mp.cpu_count()))
     NUMBER_OF_SEEDS = int(sys.argv[2]) if len(sys.argv) > 2 else 50
 
     seeds = list(range(NUMBER_OF_SEEDS))
-
     n_procs = min(max_procs, len(seeds))
 
     print(f"--- Running {NUMBER_OF_SEEDS} seeds with {n_procs} processes ---")
@@ -153,24 +153,21 @@ if __name__ == "__main__":
     start = perf_counter()
 
     with mp.Pool(n_procs) as pool:
-        results = pool.map(run_seed, seeds, chunksize=1)
+        for i, result in enumerate(pool.imap_unordered(run_seed, seeds, chunksize=1), start=1):
+            if i == 1:
+                Xn = result["X"] / NUMBER_OF_SEEDS
+                Yn = result["Y"] / NUMBER_OF_SEEDS
+                u_pred_n = result["u_pred"] / NUMBER_OF_SEEDS
+                u_exact_n = result["u_exact"] / NUMBER_OF_SEEDS
+                error_n = result["error"] / NUMBER_OF_SEEDS
+            else:
+                Xn += result["X"] / NUMBER_OF_SEEDS
+                Yn += result["Y"] / NUMBER_OF_SEEDS
+                u_pred_n += result["u_pred"] / NUMBER_OF_SEEDS
+                u_exact_n += result["u_exact"] / NUMBER_OF_SEEDS
+                error_n += result["error"] / NUMBER_OF_SEEDS
 
     elapsed = perf_counter() - start
-
-    n = len(results)
-
-    Xn = np.zeros_like(results[0]["X"])
-    Yn = np.zeros_like(results[0]["Y"])
-    u_pred_n = np.zeros_like(results[0]["u_pred"])
-    u_exact_n = np.zeros_like(results[0]["u_exact"])
-    error_n = np.zeros_like(results[0]["error"])
-
-    for result in results:
-        Xn += result["X"] / n
-        Yn += result["Y"] / n
-        u_pred_n += result["u_pred"] / n
-        u_exact_n += result["u_exact"] / n
-        error_n += result["error"] / n
 
     np.savez(
         "pinn2dpos.npz",
