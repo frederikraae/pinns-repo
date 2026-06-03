@@ -56,6 +56,8 @@ def run_seed(seed):
     n_epoch = 10_000
     N = 800
 
+    loss_hist = []
+
     for epoch in range(n_epoch):
         optimizer.zero_grad()
 
@@ -105,6 +107,8 @@ def run_seed(seed):
 
         loss = loss_pde + lam_bc * loss_bc + lam_bal * loss_balance
 
+        loss_hist.append(loss.item())
+
         loss.backward()
         optimizer.step()
 
@@ -124,9 +128,12 @@ def run_seed(seed):
     moe.eval()
 
     with torch.no_grad():
-        u_pred, _, _, _ = moe(XY)
+        u_pred, gate_weights, _, _ = moe(XY)
         u_exact = u_chos(XY[:, 0:1], XY[:, 1:2])
 
+    gate_weights = gate_weights.squeeze(1)
+
+    gate_weights = gate_weights.reshape(n_test, n_test, moe.num_experts)
     u_pred = u_pred.reshape(n_test, n_test)
     u_exact = u_exact.reshape(n_test, n_test)
 
@@ -139,6 +146,8 @@ def run_seed(seed):
         "u_pred": u_pred.numpy(),
         "u_exact": u_exact.numpy(),
         "error": error.numpy(),
+        "loss_hist": np.array(loss_hist),
+        "gate_weights": gate_weights.numpy(),
     }
 
 
@@ -168,13 +177,21 @@ if __name__ == "__main__":
     u_pred_n = np.zeros_like(results[0]["u_pred"])
     u_exact_n = np.zeros_like(results[0]["u_exact"])
     error_n = np.zeros_like(results[0]["error"])
+    loss_hist_n = np.zeros_like(results[0]["loss_hist"])
+    gate_weights_n = np.zeros_like(results[0]["gate_weights"])
+    L_max = np.zeros(n)
+    L_2 = np.zeros(n)
 
-    for result in results:
+    for i, result in enumerate(results):
         Xn += result["X"] / n
         Yn += result["Y"] / n
         u_pred_n += result["u_pred"] / n
         u_exact_n += result["u_exact"] / n
+        L_max[i] = np.max(np.abs(result["error"]))
+        L_2[i] = np.linalg.norm(result["error"])
         error_n += result["error"] / n
+        loss_hist_n += result["loss_hist"] / n
+        gate_weights_n += result["gate_weights"] / n
 
     np.savez(
         "moe2dpos.npz",
@@ -183,6 +200,10 @@ if __name__ == "__main__":
         u_pred_n=u_pred_n,
         u_exact_n=u_exact_n,
         error_n=error_n,
+        loss_hist_n=loss_hist_n,
+        L_max=L_max,
+        L_2=L_2,
+        gate_weights_n=gate_weights_n,
     )
 
     sec_per_seed = elapsed / NUMBER_OF_SEEDS
@@ -190,4 +211,4 @@ if __name__ == "__main__":
     print(f"\nN = {NUMBER_OF_SEEDS} seeds")
     print(f"Elapsed: {elapsed:.2f} s")
     print(f"Per seed: {sec_per_seed:.2f} s")
-    print("Saved moe2dpos.npz")
+    print("Saved moe2dpos_test.npz")
