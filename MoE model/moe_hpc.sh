@@ -3,6 +3,7 @@
 #BSUB -q hpc
 #BSUB -n 8
 #BSUB -W 01:00
+#BSUB -R "select[model==XeonGold6226R]"
 #BSUB -R "span[hosts=1]"
 #BSUB -R "rusage[mem=500MB]"
 #BSUB -o moe_hpc_%J.out

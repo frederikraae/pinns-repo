@@ -1,0 +1,66 @@
+No GPU on this node, CUDA module not loaded
+--- Running 50 seeds with 8 processes ---
+
+N = 50 seeds
+Elapsed: 1016.53 s
+Per seed: 20.33 s
+Saved .npz
+
+------------------------------------------------------------
+Sender: LSF System <lsfadmin@hpc.dtu.dk>
+Subject: Job 28592626: <moe_hpc> in cluster <dcc> Done
+
+Job <moe_hpc> was submitted from host <n-62-30-2> by user <s213935> in cluster <dcc> at Wed Jun  3 15:32:13 2026
+Job was executed on host(s) <8*n-62-11-61>, in queue <hpc>, as user <s213935> in cluster <dcc> at Wed Jun  3 15:34:16 2026
+</zhome/15/6/166811> was used as the home directory.
+</zhome/15/6/166811/Documents/pinns-repo/MoE model> was used as the working directory.
+Started at Wed Jun  3 15:34:16 2026
+Terminated at Wed Jun  3 15:51:19 2026
+Results reported at Wed Jun  3 15:51:19 2026
+
+Your job looked like:
+
+------------------------------------------------------------
+# LSBATCH: User input
+#!/bin/bash
+#BSUB -J moe_hpc
+#BSUB -q hpc
+#BSUB -n 8
+#BSUB -W 01:00
+#BSUB -R "select[model==XeonGold6226R]"
+#BSUB -R "span[hosts=1]"
+#BSUB -R "rusage[mem=500MB]"
+#BSUB -o moe_hpc_%J.out
+#BSUB -e moe_hpc_%J.err
+
+
+source /dtu/projects/02613_2025/conda/conda_init.sh
+conda activate PINN
+
+python -u HPCpoisson2dMoE.py 8 50
+
+------------------------------------------------------------
+
+Successfully completed.
+
+Resource usage summary:
+
+    CPU time :                                   7491.07 sec.
+    Max Memory :                                 3460 MB
+    Average Memory :                             2509.00 MB
+    Total Requested Memory :                     4000.00 MB
+    Delta Memory :                               540.00 MB
+    Max Swap :                                   -
+    Max Processes :                              12
+    Max Threads :                                16
+    Run time :                                   1023 sec.
+    Turnaround time :                            1146 sec.
+
+The output (if any) is above this job summary.
+
+
+
+PS:
+
+Read file <moe_hpc_28592626.err> for stderr output of this job.
+

@@ -194,7 +194,7 @@ if __name__ == "__main__":
         gate_weights_n += result["gate_weights"] / n
 
     np.savez(
-        "moe2dpos.npz",
+        "moe2dpos_expanded.npz",
         Xn=Xn,
         Yn=Yn,
         u_pred_n=u_pred_n,
@@ -211,4 +211,4 @@ if __name__ == "__main__":
     print(f"\nN = {NUMBER_OF_SEEDS} seeds")
     print(f"Elapsed: {elapsed:.2f} s")
     print(f"Per seed: {sec_per_seed:.2f} s")
-    print("Saved moe2dpos_test.npz")
+    print("Saved .npz")

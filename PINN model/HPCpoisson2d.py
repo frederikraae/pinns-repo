@@ -55,6 +55,8 @@ def run_seed(seed):
     # Interior points
     N = 800
 
+    loss_hist = []
+
     for epoch in range(n_epoch):
         optimizer.zero_grad()
 
@@ -102,6 +104,8 @@ def run_seed(seed):
         # Total loss
         loss = loss_pde + lam_bc * loss_bc
 
+        loss_hist.append(loss.item())
+
         loss.backward()
         optimizer.step()
 
@@ -136,6 +140,7 @@ def run_seed(seed):
         "u_pred": u_pred.numpy(),
         "u_exact": u_exact.numpy(),
         "error": error.numpy(),
+        "loss_hist": np.array(loss_hist),
     }
 
 if __name__ == "__main__":
@@ -153,29 +158,41 @@ if __name__ == "__main__":
     start = perf_counter()
 
     with mp.Pool(n_procs) as pool:
-        for i, result in enumerate(pool.imap_unordered(run_seed, seeds, chunksize=1), start=1):
-            if i == 1:
-                Xn = result["X"] / NUMBER_OF_SEEDS
-                Yn = result["Y"] / NUMBER_OF_SEEDS
-                u_pred_n = result["u_pred"] / NUMBER_OF_SEEDS
-                u_exact_n = result["u_exact"] / NUMBER_OF_SEEDS
-                error_n = result["error"] / NUMBER_OF_SEEDS
-            else:
-                Xn += result["X"] / NUMBER_OF_SEEDS
-                Yn += result["Y"] / NUMBER_OF_SEEDS
-                u_pred_n += result["u_pred"] / NUMBER_OF_SEEDS
-                u_exact_n += result["u_exact"] / NUMBER_OF_SEEDS
-                error_n += result["error"] / NUMBER_OF_SEEDS
+        results = pool.map(run_seed, seeds, chunksize=1)
 
     elapsed = perf_counter() - start
 
+    n = len(results)
+
+    Xn = np.zeros_like(results[0]["X"])
+    Yn = np.zeros_like(results[0]["Y"])
+    u_pred_n = np.zeros_like(results[0]["u_pred"])
+    u_exact_n = np.zeros_like(results[0]["u_exact"])
+    error_n = np.zeros_like(results[0]["error"])
+    loss_hist_n = np.zeros_like(results[0]["loss_hist"])
+    L_max = np.zeros(n)
+    L_2 = np.zeros(n)
+
+    for i, result in enumerate(results):
+        Xn += result["X"] / n
+        Yn += result["Y"] / n
+        u_pred_n += result["u_pred"] / n
+        u_exact_n += result["u_exact"] / n
+        L_max[i] = np.max(np.abs(result["error"]))
+        L_2[i] = np.linalg.norm(result["error"])
+        error_n += result["error"] / n
+        loss_hist_n += result["loss_hist"] / n
+        
     np.savez(
-        "pinn2dpos.npz",
+        "pinn2dpos_expanded.npz",
         Xn=Xn,
         Yn=Yn,
         u_pred_n=u_pred_n,
         u_exact_n=u_exact_n,
         error_n=error_n,
+        loss_hist_n=loss_hist_n,
+        L_max=L_max,
+        L_2=L_2,
     )
 
     sec_per_seed = elapsed / NUMBER_OF_SEEDS
@@ -183,4 +200,4 @@ if __name__ == "__main__":
     print(f"\nN = {NUMBER_OF_SEEDS} seeds")
     print(f"Elapsed: {elapsed:.2f} s")
     print(f"Per seed: {sec_per_seed:.2f} s")
-    print("Saved pinn2dpos.npz")
+    print("Saved .npz")
