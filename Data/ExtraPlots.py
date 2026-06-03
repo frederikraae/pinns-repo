@@ -8,21 +8,23 @@ L_2 = data1["L_2"]
 
 seeds = np.arange(len(L_max))
 
-L_max_mean = np.mean(L_max)
-L_2_mean = np.mean(L_2)
+fig, ax = plt.subplots(1, 2, figsize=(12, 4))
 
-plt.figure(figsize=(9, 5))
+ax[0].plot(seeds, L_max, marker="o", label=r"$L_\infty$")
+ax[0].axhline(np.mean(L_max), linestyle="--", label=fr"Mean = {np.mean(L_max):.2e}")
+ax[0].set_xlabel("Seed")
+ax[0].set_ylabel(r"$L_\infty$ error")
+ax[0].set_title(r"$L_\infty$ vs seed")
+ax[0].grid(True)
+ax[0].legend()
 
-plt.plot(seeds, L_max, marker="o", label=r"$L_\infty$")
-plt.plot(seeds, L_2, marker="s", label=r"$L_2$")
+ax[1].plot(seeds, L_2, marker="o", label=r"$L_2$")
+ax[1].axhline(np.mean(L_2), linestyle="--", label=fr"Mean = {np.mean(L_2):.2e}")
+ax[1].set_xlabel("Seed")
+ax[1].set_ylabel(r"$L_2$ error")
+ax[1].set_title(r"$L_2$ vs seed")
+ax[1].grid(True)
+ax[1].legend()
 
-plt.axhline(L_max_mean, linestyle="--", label=fr"Mean $L_\infty$ = {L_max_mean:.2e}")
-plt.axhline(L_2_mean, linestyle="--", label=fr"Mean $L_2$ = {L_2_mean:.2e}")
-
-plt.xlabel("Seed")
-plt.ylabel("Error norm")
-plt.title(r"$L_2$ and $L_\infty$ error norms vs seed")
-plt.grid(True)
-plt.legend()
 plt.tight_layout()
 plt.show()
