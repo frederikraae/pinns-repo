@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import torch.nn.init as init
 
 class MLP(nn.Module):
     def __init__(self, input_size=1, output_size=1, hidden_layers=[100, 100], activation=nn.Tanh):
@@ -57,3 +58,33 @@ class SoftAdapt:
 
         self.prev_losses = current
         return weights
+    
+class PINN(nn.Module):
+    def __init__(self, in_dim, out_dim, hidden_dim=64, hidden_layers=3):
+        super().__init__()
+
+        layers = []
+        layers.append(nn.Linear(in_dim, hidden_dim))
+
+        for _ in range(hidden_layers - 1):
+            layers.append(nn.Linear(hidden_dim, hidden_dim))
+
+        self.hidden_layers = nn.ModuleList(layers)
+        self.output_layer = nn.Linear(hidden_dim, out_dim)
+
+        self.initialize_weights()
+
+    def initialize_weights(self):
+        gain = init.calculate_gain("tanh")
+
+        for layer in self.hidden_layers:
+            init.xavier_uniform_(layer.weight, gain=gain)
+            init.zeros_(layer.bias)
+        
+        init.xavier_uniform_(self.output_layer.weight)
+        init.zeros_(self.output_layer.bias)
+
+    def forward(self, x):
+        for layer in self.hidden_layers:
+            x = torch.tanh(layer(x))
+        return self.output_layer(x)

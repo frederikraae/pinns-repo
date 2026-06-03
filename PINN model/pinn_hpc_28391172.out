@@ -1,0 +1,64 @@
+No GPU on this node, CUDA module not loaded
+--- Running 50 seeds with 8 processes ---
+
+N = 50 seeds
+Elapsed: 614.60 s
+Per seed: 12.29 s
+Saved pinn2dpos.npz
+
+------------------------------------------------------------
+Sender: LSF System <lsfadmin@hpc.dtu.dk>
+Subject: Job 28391172: <pinn_hpc> in cluster <dcc> Done
+
+Job <pinn_hpc> was submitted from host <n-62-27-18> by user <s213935> in cluster <dcc> at Fri May  8 08:09:05 2026
+Job was executed on host(s) <8*n-62-31-15>, in queue <hpc>, as user <s213935> in cluster <dcc> at Fri May  8 08:09:05 2026
+</zhome/15/6/166811> was used as the home directory.
+</zhome/15/6/166811/Documents/pinns-repo/PINN model> was used as the working directory.
+Started at Fri May  8 08:09:05 2026
+Terminated at Fri May  8 08:19:31 2026
+Results reported at Fri May  8 08:19:31 2026
+
+Your job looked like:
+
+------------------------------------------------------------
+# LSBATCH: User input
+#!/bin/bash
+#BSUB -J pinn_hpc
+#BSUB -q hpc
+#BSUB -n 8
+#BSUB -W 01:00
+#BSUB -R "span[hosts=1]"
+#BSUB -R "rusage[mem=750MB]"
+#BSUB -o pinn_hpc_%J.out
+#BSUB -e pinn_hpc_%J.err
+
+
+source /dtu/projects/02613_2025/conda/conda_init.sh
+conda activate PINN
+
+python -u HPCpoisson2d.py 8 50
+------------------------------------------------------------
+
+Successfully completed.
+
+Resource usage summary:
+
+    CPU time :                                   4611.25 sec.
+    Max Memory :                                 1688 MB
+    Average Memory :                             1405.00 MB
+    Total Requested Memory :                     6000.00 MB
+    Delta Memory :                               4312.00 MB
+    Max Swap :                                   -
+    Max Processes :                              12
+    Max Threads :                                16
+    Run time :                                   626 sec.
+    Turnaround time :                            626 sec.
+
+The output (if any) is above this job summary.
+
+
+
+PS:
+
+Read file <pinn_hpc_28391172.err> for stderr output of this job.
+
