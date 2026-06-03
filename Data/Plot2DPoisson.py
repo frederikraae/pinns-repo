@@ -8,9 +8,13 @@ data2 = np.load("moe2dpos.npz")
 error_n1 = data1["error_n"]
 error_n2 = data2["error_n"]
 
-err_max1 = np.max(np.abs(error_n1))
-err_max2 = np.max(np.abs(error_n2))
+err_max1 = np.max(error_n1)
+err_max2 = np.max(error_n2)
 err_max = max(err_max1, err_max2)
+
+err_min1 = np.min(error_n1)
+err_min2 = np.min(error_n2)
+err_min = min(err_min1, err_min2)
 
 for result in ("pinn2dpos.npz", "moe2dpos.npz"):
     data = np.load(result)
@@ -28,7 +32,7 @@ for result in ("pinn2dpos.npz", "moe2dpos.npz"):
 
     # Separate symmetric scale for error
     # err_max = np.max(np.abs(error_n))
-    err_levels = np.linspace(-err_max, err_max, 30)
+    err_levels = np.linspace(err_min, err_max, 100)
 
     fig, axes = plt.subplots(1, 3, figsize=(15, 4), constrained_layout=True)
 
@@ -51,14 +55,14 @@ for result in ("pinn2dpos.npz", "moe2dpos.npz"):
 
     # Force 0 to be the center color
     err_norm = TwoSlopeNorm(
-        vmin=-err_max,
+        vmin=err_min,
         vcenter=0.0,
         vmax=err_max
     )
 
     cf3 = axes[2].contourf(
         Xn, Yn, error_n,
-        levels=30,
+        levels=err_levels,
         cmap="coolwarm",
         norm=err_norm
     )
@@ -66,6 +70,6 @@ for result in ("pinn2dpos.npz", "moe2dpos.npz"):
     axes[2].set_title("Error: prediction - exact")
     axes[2].set_xlabel("x")
     axes[2].set_ylabel("y")
-    fig.colorbar(cf3, ax=axes[2])
+    fig.colorbar(cf3, ax=axes[2], ticks=np.linspace(err_min, err_max, 7))
 
     plt.show()
