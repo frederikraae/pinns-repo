@@ -16,8 +16,9 @@ err_min1 = np.min(error_n1)
 err_min2 = np.min(error_n2)
 err_min = min(err_min1, err_min2)
 
-for result in ("pinn2dpos.npz", "moe2dpos.npz"):
+for i, result in enumerate(("pinn2dpos.npz", "moe2dpos.npz")):
     data = np.load(result)
+    titles = ("PINN", "MoE")
 
     Xn = data["Xn"]
     Yn = data["Yn"] 
@@ -45,7 +46,7 @@ for result in ("pinn2dpos.npz", "moe2dpos.npz"):
 
     # Prediction
     cf2 = axes[1].contourf(Xn, Yn, u_pred_n, levels=levels)
-    axes[1].set_title(f"{result.split('.')[0]} prediction")
+    axes[1].set_title(f"{titles[i]} average prediction")
     axes[1].set_xlabel("x")
     axes[1].set_ylabel("y")
     fig.colorbar(cf2, ax=axes[1])
