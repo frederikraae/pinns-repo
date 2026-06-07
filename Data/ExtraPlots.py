@@ -76,3 +76,31 @@ plt.grid(True)
 plt.legend()
 plt.tight_layout()
 plt.show()
+
+#%%
+diff_Lmax = data_moe["L_max"] - data_pinn["L_max"]
+diff_L2 = data_moe["L_2"] - data_pinn["L_2"]
+
+print(f"L∞: MoE wins {(diff_Lmax < 0).mean()*100:.1f}% of seeds")
+print(f"L2: MoE wins {(diff_L2 < 0).mean()*100:.1f}% of seeds")
+
+from scipy import stats
+
+for metric in ("L_max", "L_2"):
+    rel_diff = (data_moe[metric] - data_pinn[metric]) / data_pinn[metric]
+
+    n = len(rel_diff)
+    mean = np.mean(rel_diff)
+    sem = stats.sem(rel_diff)
+
+    ci = stats.t.interval(
+        confidence=0.95,
+        df=n-1,
+        loc=mean,
+        scale=sem
+    )
+
+    print(f"{metric}: mean relative difference = {100*mean:.2f}%")
+    print(f"95% CI = [{100*ci[0]:.2f}%, {100*ci[1]:.2f}%]")
+
+# %%
