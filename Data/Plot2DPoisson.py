@@ -1,9 +1,11 @@
+# %%
+
 import numpy as np
 import matplotlib.pyplot as plt
 
 # Load data
-data1 = np.load("pinn2dpos.npz")
-data2 = np.load("moe2dpos.npz")
+data1 = np.load("pinn2dpos_expanded.npz")
+data2 = np.load("moe2dpos_expanded.npz")
 
 error_n1 = data1["error_n"]
 error_n2 = data2["error_n"]
@@ -16,7 +18,9 @@ err_min1 = np.min(error_n1)
 err_min2 = np.min(error_n2)
 err_min = min(err_min1, err_min2)
 
-for i, result in enumerate(("pinn2dpos.npz", "moe2dpos.npz")):
+# %%
+
+for i, result in enumerate(("pinn2dpos_expanded.npz", "moe2dpos_expanded.npz")):
     data = np.load(result)
     titles = ("PINN", "MoE")
 
@@ -74,3 +78,35 @@ for i, result in enumerate(("pinn2dpos.npz", "moe2dpos.npz")):
     fig.colorbar(cf3, ax=axes[2], ticks=np.linspace(err_min, err_max, 7))
 
     plt.show()
+
+# %%
+
+data = np.load("moe2dpos_expanded.npz")
+
+num_experts = 2
+
+Xn = data["Xn"]
+Yn = data["Yn"]
+gate_weights = data["gate_weights_n"]
+
+vmin = np.min(gate_weights)
+vmax = np.max(gate_weights)
+
+fig, axes = plt.subplots(1, num_experts, figsize=(10, 4), constrained_layout=True)
+
+for i in range(num_experts):
+    cf = axes[i].contourf(
+        Xn,
+        Yn,
+        gate_weights[:, :, i],
+        levels=50,
+        vmin=vmin,
+        vmax=vmax
+    )
+    axes[i].set_title(f"Expert {i+1} average weights")
+    axes[i].set_xlabel("x")
+    axes[i].set_ylabel("y")
+
+fig.colorbar(cf, ax=axes)
+plt.show()
+# %%
