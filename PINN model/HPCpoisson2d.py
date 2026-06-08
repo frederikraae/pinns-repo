@@ -18,9 +18,8 @@ def run_seed(seed):
 
     l = 10
 
-    # Chosen u(x,y) = y*cos(x) + x*cos(y), f(x) = u''(x) = -(y*cos(x) + x*cos(y))
     u_chos = lambda x, y: y * torch.cos(x) + x * torch.cos(y)
-    f = lambda x, y: - (y * torch.cos(x) + x * torch.cos(y))
+    f = lambda x, y: (y * torch.cos(x) + x * torch.cos(y))
 
     # Boundary points
     N_b = 100
@@ -52,8 +51,8 @@ def run_seed(seed):
     optimizer = torch.optim.Adam(net.parameters(), lr=1e-3)
 
     if w_softa:
-        softadapt_object = LossWeightedSoftAdapt(beta=0.2)
-        window = 5
+        softadapt_object = LossWeightedSoftAdapt(beta=0.1, accuracy_order=5)
+        window = 25
         loss_hist_1 = []
         loss_hist_2 = []
 
@@ -104,7 +103,7 @@ def run_seed(seed):
 
         # PDE loss
         f_val = f(X[:, 0:1], X[:, 1:2])
-        loss_pde = torch.mean((laplace_u - f_val)**2)
+        loss_pde = torch.mean((- laplace_u - f_val)**2)
 
         # BC loss
         u_bc = net(X_boundary)

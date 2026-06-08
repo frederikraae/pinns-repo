@@ -19,7 +19,7 @@ def run_seed(seed):
     l = 10
 
     u_chos = lambda x, y: y * torch.cos(x) + x * torch.cos(y)
-    f = lambda x, y: -(y * torch.cos(x) + x * torch.cos(y))
+    f = lambda x, y: (y * torch.cos(x) + x * torch.cos(y))
 
     # Boundary points
     N_b = 100
@@ -53,11 +53,10 @@ def run_seed(seed):
     optimizer = torch.optim.Adam(moe.parameters(), lr=1e-3)
 
     if w_softa:
-        softadapt_object = LossWeightedSoftAdapt(beta=0.2)
-        window = 5
+        softadapt_object = LossWeightedSoftAdapt(beta=0.1, accuracy_order=5)
+        window = 25
         loss_hist_1 = []
         loss_hist_2 = []
-        loss_hist_3 = []
 
     lam_pde = 1.0
     lam_bc = 10.0
@@ -105,7 +104,7 @@ def run_seed(seed):
         laplace_u = u_xx + u_yy
 
         f_val = f(X[:, 0:1], X[:, 1:2])
-        loss_pde = torch.mean((laplace_u - f_val) ** 2)
+        loss_pde = torch.mean((- laplace_u - f_val) ** 2)
 
         u_bc, _, _, _ = moe(X_boundary)
         u_true_bc = u_chos(X_boundary[:, 0:1], X_boundary[:, 1:2])
@@ -119,15 +118,13 @@ def run_seed(seed):
 
             loss_hist_1.append(loss_pde.item())
             loss_hist_2.append(loss_bc.item())
-            loss_hist_3.append(loss_balance.item())
 
             if epoch >= window and epoch % window == 0:
                 weights = softadapt_object.get_component_weights(
                     torch.tensor(loss_hist_1[-window:], dtype=torch.float32),
-                    torch.tensor(loss_hist_2[-window:], dtype=torch.float32),
-                    torch.tensor(loss_hist_3[-window:], dtype=torch.float32)
+                    torch.tensor(loss_hist_2[-window:], dtype=torch.float32)
                 )
-                lam_pde, lam_bc, lam_bal = [w.item() for w in weights]
+                lam_pde, lam_bc = [w.item() for w in weights]
 
         loss = lam_pde * loss_pde + lam_bc * loss_bc + lam_bal * loss_balance
 
