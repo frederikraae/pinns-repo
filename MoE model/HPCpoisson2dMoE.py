@@ -8,8 +8,6 @@ from time import perf_counter
 from new_model import MoEPINN, Expert
 from softadapt import LossWeightedSoftAdapt
 
-w_softa = True
-
 def run_seed(seed):
     # Avoid each process using too many CPU threads
     torch.set_num_threads(1)
@@ -184,6 +182,10 @@ if __name__ == "__main__":
 
     print(f"--- Running {NUMBER_OF_SEEDS} seeds with {n_procs} processes ---")
 
+    w_softa = sys.argv[3].lower() in ["true", "1", "yes", "y"] if len(sys.argv) > 3 else False
+
+    print(f'With SoftAdapt: {w_softa}')
+
     start = perf_counter()
 
     with mp.Pool(n_procs) as pool:
@@ -216,7 +218,7 @@ if __name__ == "__main__":
 
     if w_softa:
         np.savez(
-            "moe2dpos_expa_softa.npz",
+            "moe2dpos_expa_softa2.npz",
             Xn=Xn,
             Yn=Yn,
             u_pred_n=u_pred_n,
@@ -229,7 +231,7 @@ if __name__ == "__main__":
         )
     else:
         np.savez(
-            "moe2dpos_expanded.npz",
+            "moe2dpos_expanded2.npz",
             Xn=Xn,
             Yn=Yn,
             u_pred_n=u_pred_n,

@@ -13,4 +13,4 @@
 source /dtu/projects/02613_2025/conda/conda_init.sh
 conda activate PINN
 
-python -u HPCpoisson2dMoE.py 8 50
+python -u HPCpoisson2dMoE.py 8 50 false
