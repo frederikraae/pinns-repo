@@ -6,6 +6,9 @@ import multiprocessing as mp
 from time import perf_counter
 
 from network import PINN
+from softadapt import LossWeightedSoftAdapt
+
+w_softa = True
 
 def run_seed(seed):
     # Avoid each process using too many CPU threads
@@ -47,6 +50,14 @@ def run_seed(seed):
     )
 
     optimizer = torch.optim.Adam(net.parameters(), lr=1e-3)
+
+    if w_softa:
+        softadapt_object = LossWeightedSoftAdapt(beta=0.2)
+        window = 5
+        loss_hist_1 = []
+        loss_hist_2 = []
+
+    lam_pde = 1.0
 
     lam_bc = 10.0
 
@@ -101,8 +112,20 @@ def run_seed(seed):
         u_true_bc = u_chos(X_boundary[:,0:1], X_boundary[:,1:2])
         loss_bc = torch.mean((u_bc - u_true_bc)**2)
 
+        if w_softa:
+
+            loss_hist_1.append(loss_pde.item())
+            loss_hist_2.append(loss_bc.item())
+
+            if epoch >= window and epoch % window == 0:
+                weights = softadapt_object.get_component_weights(
+                    torch.tensor(loss_hist_1[-window:], dtype=torch.float32),
+                    torch.tensor(loss_hist_2[-window:], dtype=torch.float32)
+                )
+                lam_pde, lam_bc = [w.item() for w in weights]
+
         # Total loss
-        loss = loss_pde + lam_bc * loss_bc
+        loss = lam_pde * loss_pde + lam_bc * loss_bc
 
         loss_hist.append(loss.item())
 
@@ -140,7 +163,7 @@ def run_seed(seed):
         "u_pred": u_pred.numpy(),
         "u_exact": u_exact.numpy(),
         "error": error.numpy(),
-        "loss_hist": np.array(loss_hist),
+        "loss_hist": np.array(loss_hist)
     }
 
 if __name__ == "__main__":
