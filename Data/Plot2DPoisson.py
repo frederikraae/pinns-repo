@@ -4,25 +4,31 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Load data
-data1 = np.load("pinn2dpos_expanded.npz")
-data2 = np.load("moe2dpos_expanded.npz")
+data_moe = np.load("moe2dpos_expanded.npz")
+data_moe_softa = np.load("moe2dpos_expa_softa.npz")
+data_pinn = np.load("pinn2dpos_expanded.npz")
+data_softa = np.load("pinn2dpos_expa_softa.npz")
 
-error_n1 = data1["error_n"]
-error_n2 = data2["error_n"]
+err_max1 = np.max(data_moe["error_n"])
+err_max2 = np.max(data_moe_softa["error_n"])
+err_max3 = np.max(data_pinn["error_n"])
+err_max4 = np.max(data_softa["error_n"])
 
-err_max1 = np.max(error_n1)
-err_max2 = np.max(error_n2)
-err_max = max(err_max1, err_max2)
+err_max = max(err_max1, err_max2, err_max3, err_max4)
 
-err_min1 = np.min(error_n1)
-err_min2 = np.min(error_n2)
-err_min = min(err_min1, err_min2)
+err_min1 = np.min(data_moe["error_n"])
+err_min2 = np.min(data_moe_softa["error_n"])
+err_min3 = np.min(data_pinn["error_n"])
+err_min4 = np.min(data_softa["error_n"])
+
+err_min = min(err_min1, err_min2, err_min3, err_min4)
 
 # %%
 
-for i, result in enumerate(("pinn2dpos_expanded.npz", "moe2dpos_expanded.npz")):
+for i, result in enumerate(("pinn2dpos_expanded.npz", "moe2dpos_expanded.npz",
+                            "moe2dpos_expa_softa.npz","pinn2dpos_expa_softa.npz")):
     data = np.load(result)
-    titles = ("PINN", "MoE")
+    titles = ("PINN", "MoE", "MoE SoftAdapt", "PINN SoftAdapt")
 
     Xn = data["Xn"]
     Yn = data["Yn"] 
@@ -81,32 +87,36 @@ for i, result in enumerate(("pinn2dpos_expanded.npz", "moe2dpos_expanded.npz")):
 
 # %%
 
-data = np.load("moe2dpos_expanded.npz")
+for i, result in enumerate(("moe2dpos_expanded.npz",
+                            "moe2dpos_expa_softa.npz")):
+    data = np.load(result)
+    titles = ("MoE", "MoE SoftAdapt")
 
-num_experts = 2
 
-Xn = data["Xn"]
-Yn = data["Yn"]
-gate_weights = data["gate_weights_n"]
+    num_experts = 2
 
-vmin = np.min(gate_weights)
-vmax = np.max(gate_weights)
+    Xn = data["Xn"]
+    Yn = data["Yn"]
+    gate_weights = data["gate_weights_n"]
 
-fig, axes = plt.subplots(1, num_experts, figsize=(10, 4), constrained_layout=True)
+    vmin = np.min(gate_weights)
+    vmax = np.max(gate_weights)
 
-for i in range(num_experts):
-    cf = axes[i].contourf(
-        Xn,
-        Yn,
-        gate_weights[:, :, i],
-        levels=50,
-        vmin=vmin,
-        vmax=vmax
-    )
-    axes[i].set_title(f"Expert {i+1} average weights")
-    axes[i].set_xlabel("x")
-    axes[i].set_ylabel("y")
+    fig, axes = plt.subplots(1, num_experts, figsize=(10, 4), constrained_layout=True)
 
-fig.colorbar(cf, ax=axes)
-plt.show()
+    for k in range(num_experts):
+        cf = axes[k].contourf(
+            Xn,
+            Yn,
+            gate_weights[:, :, k],
+            levels=50,
+            vmin=vmin,
+            vmax=vmax
+        )
+        axes[k].set_title(f"{titles[i]} Expert {k+1} average weights")
+        axes[k].set_xlabel("x")
+        axes[k].set_ylabel("y")
+
+    fig.colorbar(cf, ax=axes)
+    plt.show()
 # %%

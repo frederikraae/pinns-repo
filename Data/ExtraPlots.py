@@ -4,33 +4,38 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 data_moe = np.load("moe2dpos_expanded.npz")
+data_moe_softa = np.load("moe2dpos_expa_softa.npz")
 data_pinn = np.load("pinn2dpos_expanded.npz")
+data_softa = np.load("pinn2dpos_expa_softa.npz")
 
 seeds = np.arange(len(data_moe["L_max"]))
 
 # %%
+titles = ("MoE","MoE SoftAdapt", "PINN SoftAdapt")
 
-fig, ax = plt.subplots(1, 2, figsize=(12, 4))
+for i, model in enumerate((data_moe, data_moe_softa, data_softa)):
 
-ax[0].plot(seeds, data_moe["L_max"], label=r"MoE")
-ax[0].axhline(np.mean(data_moe["L_max"]), linestyle="--", label=fr"Mean MoE: {np.mean(data_moe['L_max']):.2e}")
-ax[0].plot(seeds, data_pinn["L_max"], label=r"PINN", color ="orange")
-ax[0].axhline(np.mean(data_pinn["L_max"]), linestyle="--", label=fr"Mean PINN: {np.mean(data_pinn['L_max']):.2e}", color ="orange")
-ax[0].set_xlabel("Seed")
-ax[0].set_ylabel(r"$L_\infty$ error")
-ax[0].set_title(r"$L_\infty$ vs seed")
-ax[0].grid(True)
-ax[0].legend()
+    fig, ax = plt.subplots(1, 2, figsize=(12, 4))
 
-ax[1].plot(seeds, data_moe["L_2"], label=r"MoE")
-ax[1].axhline(np.mean(data_moe["L_2"]), linestyle="--", label=fr"Mean MoE: {np.mean(data_moe['L_2']):.2e}")
-ax[1].plot(seeds, data_pinn["L_2"], label=r"PINN", color ="orange")
-ax[1].axhline(np.mean(data_pinn["L_2"]), linestyle="--", label=fr"Mean PINN: {np.mean(data_pinn['L_2']):.2e}", color ="orange")
-ax[1].set_xlabel("Seed")
-ax[1].set_ylabel(r"$L_2$ error")
-ax[1].set_title(r"$L_2$ vs seed")
-ax[1].grid(True)
-ax[1].legend()
+    ax[0].plot(seeds, model["L_max"], label=f"{titles[i]}")
+    ax[0].axhline(np.mean(model["L_max"]), linestyle="--", label=f"Mean {titles[i]}: {np.mean(model['L_max']):.2e}")
+    ax[0].plot(seeds, data_pinn["L_max"], label=r"PINN", color ="orange")
+    ax[0].axhline(np.mean(data_pinn["L_max"]), linestyle="--", label=fr"Mean PINN: {np.mean(data_pinn['L_max']):.2e}", color ="orange")
+    ax[0].set_xlabel("Seed")
+    ax[0].set_ylabel(r"$L_\infty$ error")
+    ax[0].set_title(r"$L_\infty$ vs seed")
+    ax[0].grid(True)
+    ax[0].legend()
+
+    ax[1].plot(seeds, model["L_2"], label=f"{titles[i]}")
+    ax[1].axhline(np.mean(model["L_2"]), linestyle="--", label=f"Mean {titles[i]}: {np.mean(model['L_2']):.2e}")
+    ax[1].plot(seeds, data_pinn["L_2"], label=r"PINN", color ="orange")
+    ax[1].axhline(np.mean(data_pinn["L_2"]), linestyle="--", label=fr"Mean PINN: {np.mean(data_pinn['L_2']):.2e}", color ="orange")
+    ax[1].set_xlabel("Seed")
+    ax[1].set_ylabel(r"$L_2$ error")
+    ax[1].set_title(r"$L_2$ vs seed")
+    ax[1].grid(True)
+    ax[1].legend()
 
 # %%
 
@@ -67,6 +72,8 @@ plt.figure(figsize=(7, 4))
 
 plt.plot(epochs, data_moe['loss_hist_n'], label="MoE")
 plt.plot(epochs, data_pinn['loss_hist_n'], label="PINN", color="orange")
+plt.plot(epochs, data_moe_softa['loss_hist_n'], label="MoE SoftAdapt")
+plt.plot(epochs, data_softa['loss_hist_n'], label="PINN SoftAdapt")
 
 plt.xlabel("Epoch")
 plt.ylabel("Average training loss")
@@ -76,31 +83,5 @@ plt.grid(True)
 plt.legend()
 plt.tight_layout()
 plt.show()
-
-#%%
-diff_Lmax = data_moe["L_max"] - data_pinn["L_max"]
-diff_L2 = data_moe["L_2"] - data_pinn["L_2"]
-
-print(f"L∞: MoE wins {(diff_Lmax < 0).mean()*100:.1f}% of seeds")
-print(f"L2: MoE wins {(diff_L2 < 0).mean()*100:.1f}% of seeds")
-
-from scipy import stats
-
-for metric in ("L_max", "L_2"):
-    rel_diff = (data_moe[metric] - data_pinn[metric]) / data_pinn[metric]
-
-    n = len(rel_diff)
-    mean = np.mean(rel_diff)
-    sem = stats.sem(rel_diff)
-
-    ci = stats.t.interval(
-        confidence=0.95,
-        df=n-1,
-        loc=mean,
-        scale=sem
-    )
-
-    print(f"{metric}: mean relative difference = {100*mean:.2f}%")
-    print(f"95% CI = [{100*ci[0]:.2f}%, {100*ci[1]:.2f}%]")
 
 # %%

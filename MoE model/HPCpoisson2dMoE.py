@@ -219,16 +219,17 @@ if __name__ == "__main__":
 
     if w_softa:
         np.savez(
-        "moe2dpos_expa_softa.npz",
-        Xn=Xn,
-        Yn=Yn,
-        u_pred_n=u_pred_n,
-        u_exact_n=u_exact_n,
-        error_n=error_n,
-        loss_hist_n=loss_hist_n,
-        L_max=L_max,
-        L_2=L_2,
-    )
+            "moe2dpos_expa_softa.npz",
+            Xn=Xn,
+            Yn=Yn,
+            u_pred_n=u_pred_n,
+            u_exact_n=u_exact_n,
+            error_n=error_n,
+            loss_hist_n=loss_hist_n,
+            L_max=L_max,
+            L_2=L_2,
+            gate_weights_n = gate_weights_n
+        )
     else:
         np.savez(
             "moe2dpos_expanded.npz",
@@ -240,6 +241,7 @@ if __name__ == "__main__":
             loss_hist_n=loss_hist_n,
             L_max=L_max,
             L_2=L_2,
+            gate_weights_n = gate_weights_n
         )
 
     sec_per_seed = elapsed / NUMBER_OF_SEEDS
