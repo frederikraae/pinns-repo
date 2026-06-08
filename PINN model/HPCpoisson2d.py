@@ -131,8 +131,6 @@ def run_seed(seed):
         loss.backward()
         optimizer.step()
 
-    print(f'seed: {seed}, last lam_pde: {loss_hist_1[-1]}, last lam_bc: {loss_hist_2[-1]}')
-
     # Evaluation
     n_test = 1000
 
