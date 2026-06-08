@@ -58,7 +58,6 @@ def run_seed(seed):
         loss_hist_2 = []
 
     lam_pde = 1.0
-
     lam_bc = 10.0
 
     # Training loop
@@ -132,6 +131,8 @@ def run_seed(seed):
         loss.backward()
         optimizer.step()
 
+    print(f'seed: {seed}, last lam_pde: {loss_hist_1[-1]}, last lam_bc: {loss_hist_2[-1]}')
+
     # Evaluation
     n_test = 1000
 
@@ -182,7 +183,6 @@ if __name__ == "__main__":
 
     with mp.Pool(n_procs) as pool:
         results = pool.map(run_seed, seeds, chunksize=1)
-
     elapsed = perf_counter() - start
 
     n = len(results)
@@ -205,9 +205,10 @@ if __name__ == "__main__":
         L_2[i] = np.linalg.norm(result["error"])
         error_n += result["error"] / n
         loss_hist_n += result["loss_hist"] / n
-        
-    np.savez(
-        "pinn2dpos_expanded.npz",
+
+    if w_softa:
+        np.savez(
+        "pinn2dpos_expa_softa.npz",
         Xn=Xn,
         Yn=Yn,
         u_pred_n=u_pred_n,
@@ -217,6 +218,18 @@ if __name__ == "__main__":
         L_max=L_max,
         L_2=L_2,
     )
+    else:
+        np.savez(
+            "pinn2dpos_expanded.npz",
+            Xn=Xn,
+            Yn=Yn,
+            u_pred_n=u_pred_n,
+            u_exact_n=u_exact_n,
+            error_n=error_n,
+            loss_hist_n=loss_hist_n,
+            L_max=L_max,
+            L_2=L_2,
+        )
 
     sec_per_seed = elapsed / NUMBER_OF_SEEDS
 

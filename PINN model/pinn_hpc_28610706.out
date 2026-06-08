@@ -1,0 +1,69 @@
+No GPU on this node, CUDA module not loaded
+--- Running 4 seeds with 4 processes ---
+seed: 0, last lam_pde: 0.00511190528050065, last lam_bc: 0.002939114812761545
+seed: 2, last lam_pde: 0.01227208599448204, last lam_bc: 0.004822792485356331
+seed: 3, last lam_pde: 0.005729832220822573, last lam_bc: 0.003124988405033946
+seed: 1, last lam_pde: 0.0032746947836130857, last lam_bc: 0.001929846708662808
+
+N = 4 seeds
+Elapsed: 98.15 s
+Per seed: 24.54 s
+Saved .npz
+
+------------------------------------------------------------
+Sender: LSF System <lsfadmin@hpc.dtu.dk>
+Subject: Job 28610706: <pinn_hpc> in cluster <dcc> Done
+
+Job <pinn_hpc> was submitted from host <n-62-9-42> by user <s213935> in cluster <dcc> at Mon Jun  8 10:36:09 2026
+Job was executed on host(s) <8*n-62-11-52>, in queue <hpc>, as user <s213935> in cluster <dcc> at Mon Jun  8 10:36:11 2026
+</zhome/15/6/166811> was used as the home directory.
+</zhome/15/6/166811/Documents/pinns-repo/PINN model> was used as the working directory.
+Started at Mon Jun  8 10:36:11 2026
+Terminated at Mon Jun  8 10:37:57 2026
+Results reported at Mon Jun  8 10:37:57 2026
+
+Your job looked like:
+
+------------------------------------------------------------
+# LSBATCH: User input
+#!/bin/bash
+#BSUB -J pinn_hpc
+#BSUB -q hpc
+#BSUB -n 8
+#BSUB -W 01:00
+#BSUB -R "select[model==XeonGold6226R]"
+#BSUB -R "span[hosts=1]"
+#BSUB -R "rusage[mem=500MB]"
+#BSUB -o pinn_hpc_%J.out
+#BSUB -e pinn_hpc_%J.err
+
+
+source /dtu/projects/02613_2025/conda/conda_init.sh
+conda activate PINN
+
+python -u HPCpoisson2d.py 4 4
+------------------------------------------------------------
+
+Successfully completed.
+
+Resource usage summary:
+
+    CPU time :                                   391.55 sec.
+    Max Memory :                                 685 MB
+    Average Memory :                             685.00 MB
+    Total Requested Memory :                     4000.00 MB
+    Delta Memory :                               3315.00 MB
+    Max Swap :                                   -
+    Max Processes :                              8
+    Max Threads :                                12
+    Run time :                                   106 sec.
+    Turnaround time :                            108 sec.
+
+The output (if any) is above this job summary.
+
+
+
+PS:
+
+Read file <pinn_hpc_28610706.err> for stderr output of this job.
+
