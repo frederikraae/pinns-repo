@@ -4,26 +4,41 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.colors import TwoSlopeNorm
 
+# Fælles fontstørrelser for alle plots
+TITLE_SIZE = 16
+LABEL_SIZE = 14
+TICK_SIZE = 12
+CBAR_TICK_SIZE = 12
+
+plt.rcParams.update({
+    "font.size": LABEL_SIZE,
+    "axes.titlesize": TITLE_SIZE,
+    "axes.labelsize": LABEL_SIZE,
+    "xtick.labelsize": TICK_SIZE,
+    "ytick.labelsize": TICK_SIZE,
+    "legend.fontsize": 12,
+})
+
 # Indlæs data
 data_moe = np.load("moe2dpos_expanded.npz")
-data_moe_softa = np.load("moe2dpos_expa_softa.npz")
+# data_moe_softa = np.load("moe2dpos_expa_softa.npz")
 data_pinn = np.load("pinn2dpos_expanded.npz")
 data_softa = np.load("pinn2dpos_expa_softa.npz")
 
 # Find fælles farveskala for fejlen på tværs af alle modeller
 err_max1 = np.max(data_moe["error_n"])
-err_max2 = np.max(data_moe_softa["error_n"])
+# err_max2 = np.max(data_moe_softa["error_n"])
 err_max3 = np.max(data_pinn["error_n"])
 err_max4 = np.max(data_softa["error_n"])
 
-err_max = max(err_max1, err_max2, err_max3, err_max4)
+err_max = max(err_max1, err_max3, err_max4)
 
 err_min1 = np.min(data_moe["error_n"])
-err_min2 = np.min(data_moe_softa["error_n"])
+# err_min2 = np.min(data_moe_softa["error_n"])
 err_min3 = np.min(data_pinn["error_n"])
 err_min4 = np.min(data_softa["error_n"])
 
-err_min = min(err_min1, err_min2, err_min3, err_min4)
+err_min = min(err_min1, err_min3, err_min4)
 
 # %%
 
@@ -31,7 +46,6 @@ err_min = min(err_min1, err_min2, err_min3, err_min4)
 for i, result in enumerate((
     "pinn2dpos_expanded.npz",
     "moe2dpos_expanded.npz",
-    "moe2dpos_expa_softa.npz",
     "pinn2dpos_expa_softa.npz"
 )):
     data = np.load(result)
@@ -39,7 +53,6 @@ for i, result in enumerate((
     titles = (
         "PINN",
         "MoE-PINN",
-        "MoE-PINN med SoftAdapt",
         "PINN med SoftAdapt"
     )
 
@@ -64,14 +77,16 @@ for i, result in enumerate((
     axes[0].set_title("Eksakt løsning")
     axes[0].set_xlabel("$x$")
     axes[0].set_ylabel("$y$")
-    fig.colorbar(cf1, ax=axes[0])
+    cbar1 = fig.colorbar(cf1, ax=axes[0])
+    cbar1.ax.tick_params(labelsize=CBAR_TICK_SIZE)
 
     # Gennemsnitlig prædiktion
     cf2 = axes[1].contourf(Xn, Yn, u_pred_n, levels=levels)
-    axes[1].set_title(f"{titles[i]}: gennemsnitlig prædiktion")
+    axes[1].set_title(f"{titles[i]}:\n gennemsnitlig prædiktion")
     axes[1].set_xlabel("$x$")
     axes[1].set_ylabel("$y$")
-    fig.colorbar(cf2, ax=axes[1])
+    cbar2 = fig.colorbar(cf2, ax=axes[1])
+    cbar2.ax.tick_params(labelsize=CBAR_TICK_SIZE)
 
     # Fejl
     err_norm = TwoSlopeNorm(
@@ -89,10 +104,11 @@ for i, result in enumerate((
         norm=err_norm
     )
 
-    axes[2].set_title("Fejl: prædiktion minus eksakt løsning")
+    axes[2].set_title("Fejl:\n prædiktion minus eksakt løsning")
     axes[2].set_xlabel("$x$")
     axes[2].set_ylabel("$y$")
-    fig.colorbar(cf3, ax=axes[2], ticks=np.linspace(err_min, err_max, 7))
+    cbar3 = fig.colorbar(cf3, ax=axes[2], ticks=np.linspace(err_min, err_max, 7))
+    cbar3.ax.tick_params(labelsize=CBAR_TICK_SIZE)
 
     plt.show()
 
