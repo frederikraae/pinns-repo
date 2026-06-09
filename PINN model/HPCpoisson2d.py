@@ -49,7 +49,7 @@ def run_seed(seed):
     optimizer = torch.optim.Adam(net.parameters(), lr=1e-3)
 
     if w_softa:
-        softadapt_object = LossWeightedSoftAdapt(beta=1e-2, accuracy_order=5)
+        softadapt_object = LossWeightedSoftAdapt(beta=0.1, accuracy_order=5)
         window = 25
         loss_hist_1 = []
         loss_hist_2 = []
