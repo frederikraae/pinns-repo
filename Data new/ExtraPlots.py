@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 data_moe = np.load("moe2dpos_expanded.npz")
-data_moe_softa = np.load("moe2dpos_expa_softa.npz")
+# data_moe_softa = np.load("moe2dpos_expa_softa.npz")
 data_pinn = np.load("pinn2dpos_expanded.npz")
 data_softa = np.load("pinn2dpos_expa_softa.npz")
 
@@ -13,7 +13,7 @@ seeds = np.arange(len(data_moe["L_max"]))
 # %%
 titles = ("MoE-PINN","MoE-PINN med SoftAdapt", "PINN med SoftAdapt")
 
-for i, model in enumerate((data_moe, data_moe_softa, data_softa)):
+for i, model in enumerate((data_moe, data_softa)):
 
     fig, ax = plt.subplots(1, 2, figsize=(12, 4))
 
@@ -70,12 +70,12 @@ plt.figure(figsize=(7, 4))
 
 plt.semilogy(epochs, data_moe["val_l2"], label="MoE-PINN")
 plt.semilogy(epochs, data_pinn["val_l2"], label="PINN", color="orange")
-plt.semilogy(epochs, data_moe_softa["val_l2"], label="MoE-PINN med SoftAdapt")
-plt.semilogy(epochs, data_softa["val_l2"], label="PINN med SoftAdapt")
+# plt.semilogy(epochs, data_moe_softa["val_l2"], label="MoE-PINN med SoftAdapt")
+plt.semilogy(epochs, data_softa["val_l2"], label="PINN med SoftAdapt", color ="green")
 
 plt.xlabel("Epoch")
 plt.ylabel(r"$L_2$-valideringsfejl")
-plt.title(r"$L_2$-valideringsfejl som funktion af 'epoch'")
+plt.title(r"Gennemsnitlig $L_2$-valideringsfejl som funktion af 'epoch'")
 plt.grid(True, which="both")
 plt.legend()
 plt.tight_layout()
@@ -90,12 +90,12 @@ plt.figure(figsize=(7, 4))
 
 plt.semilogy(epochs, data_moe["val_lmax"], label="MoE-PINN")
 plt.semilogy(epochs, data_pinn["val_lmax"], label="PINN", color="orange")
-plt.semilogy(epochs, data_moe_softa["val_lmax"], label="MoE-PINN med SoftAdapt")
-plt.semilogy(epochs, data_softa["val_lmax"], label="PINN med SoftAdapt")
+# plt.semilogy(epochs, data_moe_softa["val_lmax"], label="MoE-PINN med SoftAdapt")
+plt.semilogy(epochs, data_softa["val_lmax"], label="PINN med SoftAdapt", color ="green")
 
 plt.xlabel("Epoch")
 plt.ylabel(r"$L_\infty$-valideringsfejl")
-plt.title(r"$L_\infty$-valideringsfejl som funktion af 'epoch'")
+plt.title(r"Gennemsnitlig $L_\infty$-valideringsfejl som funktion af 'epoch'")
 plt.grid(True, which="both")
 plt.legend()
 plt.tight_layout()
