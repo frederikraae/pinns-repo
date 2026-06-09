@@ -1,0 +1,17 @@
+No GPU on this node, CUDA module not loaded
+Time elapsed: 0.09 min
+epoch:    0 loss=9.907861e+01 pde=1.400737e+00 bc=1.260584e+01 ic=6.369438e+00
+Time elapsed: 43.73 min
+epoch: 1500 loss=3.736368e-02 pde=1.040549e-02 bc=8.041966e-04 ic=4.252464e-04
+Time elapsed: 86.56 min
+epoch: 3000 loss=2.879515e-02 pde=5.788266e-03 bc=1.488447e-03 ic=7.976240e-04
+Time elapsed: 129.08 min
+epoch: 4500 loss=1.354261e-02 pde=3.396353e-03 bc=5.115493e-04 ic=1.591605e-04
+Time elapsed: 171.12 min
+epoch: 6000 loss=1.105416e-02 pde=2.504180e-03 bc=5.449107e-04 ic=1.634126e-04
+Time elapsed: 213.04 min
+epoch: 7500 loss=2.586007e-02 pde=2.077554e-03 bc=3.195576e-03 ic=7.299067e-04
+Time elapsed: 255.06 min
+epoch: 9000 loss=8.481008e-03 pde=1.717257e-03 bc=5.145920e-04 ic=1.512554e-04
+Time elapsed: 297.12 min
+epoch: 10500 loss=1.242044e-02 pde=1.497877e-03 bc=1.182453e-03 ic=4.029098e-04
