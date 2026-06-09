@@ -13,7 +13,7 @@ l = 10
 # u = 1/6 * (x**3*y + x*y**3)
 # lap u = 2*x*y
 
-# Chosen u(x,y) = y*cos(x) + x*cos(y), f(x) = u''(x) = -(y*cos(x) + x*cos(y))
+# Chosen u(x,y) = y*cos(x) + x*cos(y), f(x, y) = lap u(x, y) = -(y*cos(x) + x*cos(y))
 u_chos = lambda x, y: y * torch.cos(x) + x * torch.cos(y)
 f = lambda x, y: - (y * torch.cos(x) + x * torch.cos(y))
 
