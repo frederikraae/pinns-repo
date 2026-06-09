@@ -46,6 +46,24 @@ def run_seed(seed):
         hidden_layers=4
     )
 
+    # Fixed validation grid
+    n_val = 100
+
+    x_val = torch.linspace(0, l, n_val)
+    y_val = torch.linspace(0, l, n_val)
+
+    Xg_val, Yg_val = torch.meshgrid(x_val, y_val, indexing="ij")
+
+    X_val = torch.cat(
+        [Xg_val.reshape(-1, 1), Yg_val.reshape(-1, 1)],
+        dim=1
+    )
+
+    u_true_val = u_chos(X_val[:, 0:1], X_val[:, 1:2])
+
+    val_l2 = []
+    val_lmax = []
+
     optimizer = torch.optim.Adam(net.parameters(), lr=1e-3)
 
     if w_softa:
@@ -61,8 +79,6 @@ def run_seed(seed):
     n_epoch = 10_000
     # Interior points
     N = 800
-
-    loss_hist = []
 
     for epoch in range(n_epoch):
         optimizer.zero_grad()
@@ -123,10 +139,19 @@ def run_seed(seed):
         # Total loss
         loss = lam_pde * loss_pde + lam_bc * loss_bc
 
-        loss_hist.append(loss.item())
-
         loss.backward()
         optimizer.step()
+
+        # Validation error on fixed validation grid
+        with torch.no_grad():
+            u_pred_val = net(X_val)
+            err_val = u_pred_val - u_true_val
+
+            v_l2 = torch.norm(err_val)
+            v_lmax = torch.max(torch.abs(err_val))
+
+        val_l2.append(v_l2.item())
+        val_lmax.append(v_lmax.item())
 
     # Evaluation
     n_test = 1000
@@ -159,7 +184,8 @@ def run_seed(seed):
         "u_pred": u_pred.numpy(),
         "u_exact": u_exact.numpy(),
         "error": error.numpy(),
-        "loss_hist": np.array(loss_hist)
+        "val_l2": np.array(val_l2),
+        "val_lmax": np.array(val_lmax)
     }
 
 if __name__ == "__main__":
@@ -189,7 +215,8 @@ if __name__ == "__main__":
     u_pred_n = np.zeros_like(results[0]["u_pred"])
     u_exact_n = np.zeros_like(results[0]["u_exact"])
     error_n = np.zeros_like(results[0]["error"])
-    loss_hist_n = np.zeros_like(results[0]["loss_hist"])
+    val_l2 = np.zeros_like(results[0]["val_l2"])
+    val_lmax = np.zeros_like(results[0]["val_lmax"])
     L_max = np.zeros(n)
     L_2 = np.zeros(n)
 
@@ -201,20 +228,22 @@ if __name__ == "__main__":
         L_max[i] = np.max(np.abs(result["error"]))
         L_2[i] = np.linalg.norm(result["error"])
         error_n += result["error"] / n
-        loss_hist_n += result["loss_hist"] / n
+        val_l2 += result["val_l2"] / n
+        val_lmax += result["val_lmax"] / n
 
     if w_softa:
         np.savez(
-        "pinn2dpos_expa_softa2.npz",
-        Xn=Xn,
-        Yn=Yn,
-        u_pred_n=u_pred_n,
-        u_exact_n=u_exact_n,
-        error_n=error_n,
-        loss_hist_n=loss_hist_n,
-        L_max=L_max,
-        L_2=L_2,
-    )
+            "pinn2dpos_expa_softa2.npz",
+            Xn=Xn,
+            Yn=Yn,
+            u_pred_n=u_pred_n,
+            u_exact_n=u_exact_n,
+            error_n=error_n,
+            L_max=L_max,
+            L_2=L_2,
+            val_l2=val_l2,
+            val_lmax=val_lmax
+        )
     else:
         np.savez(
             "pinn2dpos_expanded2.npz",
@@ -223,9 +252,10 @@ if __name__ == "__main__":
             u_pred_n=u_pred_n,
             u_exact_n=u_exact_n,
             error_n=error_n,
-            loss_hist_n=loss_hist_n,
             L_max=L_max,
             L_2=L_2,
+            val_l2=val_l2,
+            val_lmax=val_lmax
         )
 
     sec_per_seed = elapsed / NUMBER_OF_SEEDS

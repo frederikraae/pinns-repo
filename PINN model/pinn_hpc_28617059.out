@@ -1,0 +1,65 @@
+No GPU on this node, CUDA module not loaded
+--- Running 50 seeds with 8 processes ---
+
+N = 50 seeds
+Elapsed: 919.52 s
+Per seed: 18.39 s
+Saved .npz
+
+------------------------------------------------------------
+Sender: LSF System <lsfadmin@hpc.dtu.dk>
+Subject: Job 28617059: <pinn_hpc> in cluster <dcc> Done
+
+Job <pinn_hpc> was submitted from host <n-62-30-2> by user <s213935> in cluster <dcc> at Tue Jun  9 10:34:28 2026
+Job was executed on host(s) <8*n-62-11-67>, in queue <hpc>, as user <s213935> in cluster <dcc> at Tue Jun  9 10:34:30 2026
+</zhome/15/6/166811> was used as the home directory.
+</zhome/15/6/166811/Documents/pinns-repo/PINN model> was used as the working directory.
+Started at Tue Jun  9 10:34:30 2026
+Terminated at Tue Jun  9 10:49:55 2026
+Results reported at Tue Jun  9 10:49:55 2026
+
+Your job looked like:
+
+------------------------------------------------------------
+# LSBATCH: User input
+#!/bin/bash
+#BSUB -J pinn_hpc
+#BSUB -q hpc
+#BSUB -n 8
+#BSUB -W 01:00
+#BSUB -R "select[model==XeonGold6226R]"
+#BSUB -R "span[hosts=1]"
+#BSUB -R "rusage[mem=500MB]"
+#BSUB -o pinn_hpc_%J.out
+#BSUB -e pinn_hpc_%J.err
+
+
+source /dtu/projects/02613_2025/conda/conda_init.sh
+conda activate PINN
+
+python -u HPCpoisson2d.py 8 50 false
+------------------------------------------------------------
+
+Successfully completed.
+
+Resource usage summary:
+
+    CPU time :                                   6675.66 sec.
+    Max Memory :                                 2469 MB
+    Average Memory :                             1957.40 MB
+    Total Requested Memory :                     4000.00 MB
+    Delta Memory :                               1531.00 MB
+    Max Swap :                                   -
+    Max Processes :                              12
+    Max Threads :                                16
+    Run time :                                   925 sec.
+    Turnaround time :                            927 sec.
+
+The output (if any) is above this job summary.
+
+
+
+PS:
+
+Read file <pinn_hpc_28617059.err> for stderr output of this job.
+
