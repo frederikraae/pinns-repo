@@ -247,7 +247,7 @@ if __name__ == "__main__":
 
     if w_softa:
         np.savez(
-            "moe2dpos_expa_softa2.npz",
+            "moe2dpos_expa_softa.npz",
             Xn=Xn,
             Yn=Yn,
             u_pred_n=u_pred_n,
@@ -261,7 +261,7 @@ if __name__ == "__main__":
         )
     else:
         np.savez(
-            "moe2dpos_expanded2.npz",
+            "moe2dpos_expanded.npz",
             Xn=Xn,
             Yn=Yn,
             u_pred_n=u_pred_n,
