@@ -8,6 +8,8 @@ from network import PINN
 from torch import sin, cos, exp, pi
 from time import perf_counter
 
+import sys
+
 start = perf_counter()
 
 torch.manual_seed(1)
@@ -49,7 +51,7 @@ lam_bc = 5.0
 lam_ic = 5.0
 
 # Interior points (collacation)
-N = 50
+N = int(sys.argv[1])
 
 loss_history = []
 loss_pde_history = []
@@ -302,7 +304,7 @@ for epoch in range(n_epoch):
     loss.backward()
     optimizer.step()
 
-    if epoch % (n_epoch//20) == 0:
+    if epoch % (n_epoch//10) == 0:
         elapsed = (perf_counter() - start)/60
         print(f"Time elapsed: {elapsed:.2f} min")
         print(
@@ -361,7 +363,7 @@ v_exact_n = v_exact.numpy()
 p_exact_n = p_exact.numpy()
 
 np.savez(
-        "pinnTaylorGreen.npz",
+        f"pinnTaylorGreen_{N}.npz",
         Xn = X_test.numpy(),
         Yn = Y_test.numpy(),
         u_pred_n = u_pred.numpy(),
