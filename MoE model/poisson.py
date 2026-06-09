@@ -4,7 +4,6 @@ import numpy as np
 import torch
 import torch.nn as nn
 import matplotlib.pyplot as plt
-from scipy.integrate import solve_ivp, solve_bvp
 from new_model import MoEPINN, Expert
 from torch import sin, exp, pi
 
@@ -251,3 +250,20 @@ plt.title("Gate responses over time")
 plt.legend()
 plt.grid()
 plt.show()
+
+#%%
+# Errors PINN and MOE
+error_pinn = (u_chos(x_test) - u_pred_pinn).numpy()
+error_moe = (u_chos(x_test) - u_pred_moe).numpy()
+
+# L2 error norm
+l2_error_pinn = np.sqrt(np.sum(error_pinn ** 2))
+l2_error_moe = np.sqrt(np.sum(error_moe ** 2))
+
+print(l2_error_pinn, l2_error_moe)
+
+# Maximum norm
+max_error_pinn = np.max(np.abs(error_pinn))
+max_error_moe = np.max(np.abs(error_moe))
+
+print(max_error_pinn, max_error_moe)
