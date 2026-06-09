@@ -6,6 +6,9 @@ from torch.utils.data import TensorDataset, DataLoader, random_split
 import matplotlib.pyplot as plt
 from network import PINN
 from torch import sin, cos, exp, pi
+from time import perf_counter
+
+start = perf_counter()
 
 torch.manual_seed(1)
 
@@ -15,7 +18,7 @@ L = 1.0
 rho = 1.0
 nu = 0.01
 
-T = 30
+T = 10
 
 # Analytical solution
 u_analytical = lambda x, y, t: V0 * cos(x / L) * sin(y / L) * exp(-2 * (nu / L**2) * t)
@@ -26,8 +29,8 @@ p_analytical = lambda x, y, t: (-rho / 4) * V0**2 * (cos(2*x / L) + cos(2*y / L)
 net = PINN(
     in_dim=3,
     out_dim=3,
-    hidden_dim=64,
-    hidden_layers=6
+    hidden_dim=128,
+    hidden_layers=8
 )
 
 optimizer = torch.optim.Adam(net.parameters(), lr=1e-3)
@@ -42,11 +45,11 @@ X_ic = torch.cat([x_ic,y_ic,t_ic], dim=1)
 
 # Loss term weights
 lam_pde = 3.0
-lam_bc = 10.0
-lam_ic = 1.0
+lam_bc = 5.0
+lam_ic = 5.0
 
 # Interior points (collacation)
-N = 2000
+N = 5000
 
 loss_history = []
 loss_pde_history = []
@@ -55,7 +58,7 @@ loss_ic_history = []
 
 #%%
 # Training loop
-n_epoch = 10000
+n_epoch = 15_000
 for epoch in range(n_epoch):
     optimizer.zero_grad()
 
@@ -194,7 +197,9 @@ for epoch in range(n_epoch):
     loss.backward()
     optimizer.step()
 
-    if epoch % (n_epoch//10) == 0:
+    if epoch % (n_epoch//20) == 0:
+        elapsed = (perf_counter() - start)/60
+        print(f"Time elapsed: {elapsed:.2f} min")
         print(
             f"epoch: {epoch:4d} "
             f"loss={loss.item():.6e} "
@@ -250,79 +255,95 @@ u_exact_n = u_exact.numpy()
 v_exact_n = v_exact.numpy()
 p_exact_n = p_exact.numpy()
 
-
-# Plot 1
-fig, axes = plt.subplots(1, 3, figsize=(15, 4), constrained_layout=True)
-
-# Exact
-cf1 = axes[0].contourf(Xn, Yn, u_exact_n)
-axes[0].set_title("Exact solution")
-axes[0].set_xlabel("x")
-axes[0].set_ylabel("y")
-fig.colorbar(cf1, ax=axes[0])
-
-# Prediction
-cf2 = axes[1].contourf(Xn, Yn, u_pred_n)
-axes[1].set_title("PINN prediction")
-axes[1].set_xlabel("x")
-axes[1].set_ylabel("y")
-fig.colorbar(cf2, ax=axes[1])
+np.savez(
+        "pinnTaylorGreen.npz",
+        Xn = X_test.numpy(),
+        Yn = Y_test.numpy(),
+        u_pred_n = u_pred.numpy(),
+        v_pred_n = v_pred.numpy(),
+        p_pred_n = p_pred.numpy(),
+        u_exact_n = u_exact.numpy(),
+        v_exact_n = v_exact.numpy(),
+        p_exact_n = p_exact.numpy(),
+        loss_history = np.array(loss_history),
+        loss_pde_history = np.array(loss_pde_history),
+        loss_bc_history = np.array(loss_bc_history),
+        loss_ic_history = np.array(loss_ic_history)
+    )
 
 
+# # Plot 1
+# fig, axes = plt.subplots(1, 3, figsize=(15, 4), constrained_layout=True)
 
-# Plot 1
-fig, axes = plt.subplots(1, 3, figsize=(15, 4), constrained_layout=True)
+# # Exact
+# cf1 = axes[0].contourf(Xn, Yn, u_exact_n)
+# axes[0].set_title("Exact solution")
+# axes[0].set_xlabel("x")
+# axes[0].set_ylabel("y")
+# fig.colorbar(cf1, ax=axes[0])
 
-# Exact
-cf1 = axes[0].contourf(Xn, Yn, v_exact_n)
-axes[0].set_title("Exact solution")
-axes[0].set_xlabel("x")
-axes[0].set_ylabel("y")
-fig.colorbar(cf1, ax=axes[0])
-
-# Prediction
-cf2 = axes[1].contourf(Xn, Yn, v_pred_n)
-axes[1].set_title("PINN prediction")
-axes[1].set_xlabel("x")
-axes[1].set_ylabel("y")
-fig.colorbar(cf2, ax=axes[1])
-
-
-# Plot 1
-fig, axes = plt.subplots(1, 3, figsize=(15, 4), constrained_layout=True)
-
-# Exact
-cf1 = axes[0].contourf(Xn, Yn, p_exact_n)
-axes[0].set_title("Exact solution")
-axes[0].set_xlabel("x")
-axes[0].set_ylabel("y")
-fig.colorbar(cf1, ax=axes[0])
-
-# Prediction
-cf2 = axes[1].contourf(Xn, Yn, p_pred_n)
-axes[1].set_title("PINN prediction")
-axes[1].set_xlabel("x")
-axes[1].set_ylabel("y")
-fig.colorbar(cf2, ax=axes[1])
-
-#%%
-plt.show()
-
-plt.figure(figsize=(8, 5))
-
-plt.semilogy(loss_history, label="Total loss")
-plt.semilogy(loss_pde_history, label="PDE loss")
-plt.semilogy(loss_ic_history, label="IC loss")
-plt.semilogy(loss_bc_history, label="BC loss")
-
-plt.xlabel("Epoch")
-plt.ylabel("Loss")
-plt.title("Training loss")
-plt.legend()
-plt.grid(True)
-plt.show()
+# # Prediction
+# cf2 = axes[1].contourf(Xn, Yn, u_pred_n)
+# axes[1].set_title("PINN prediction")
+# axes[1].set_xlabel("x")
+# axes[1].set_ylabel("y")
+# fig.colorbar(cf2, ax=axes[1])
 
 
 
+# # Plot 1
+# fig, axes = plt.subplots(1, 3, figsize=(15, 4), constrained_layout=True)
 
-#%%
+# # Exact
+# cf1 = axes[0].contourf(Xn, Yn, v_exact_n)
+# axes[0].set_title("Exact solution")
+# axes[0].set_xlabel("x")
+# axes[0].set_ylabel("y")
+# fig.colorbar(cf1, ax=axes[0])
+
+# # Prediction
+# cf2 = axes[1].contourf(Xn, Yn, v_pred_n)
+# axes[1].set_title("PINN prediction")
+# axes[1].set_xlabel("x")
+# axes[1].set_ylabel("y")
+# fig.colorbar(cf2, ax=axes[1])
+
+
+# # Plot 1
+# fig, axes = plt.subplots(1, 3, figsize=(15, 4), constrained_layout=True)
+
+# # Exact
+# cf1 = axes[0].contourf(Xn, Yn, p_exact_n)
+# axes[0].set_title("Exact solution")
+# axes[0].set_xlabel("x")
+# axes[0].set_ylabel("y")
+# fig.colorbar(cf1, ax=axes[0])
+
+# # Prediction
+# cf2 = axes[1].contourf(Xn, Yn, p_pred_n)
+# axes[1].set_title("PINN prediction")
+# axes[1].set_xlabel("x")
+# axes[1].set_ylabel("y")
+# fig.colorbar(cf2, ax=axes[1])
+
+# #%%
+# plt.show()
+
+# plt.figure(figsize=(8, 5))
+
+# plt.semilogy(loss_history, label="Total loss")
+# plt.semilogy(loss_pde_history, label="PDE loss")
+# plt.semilogy(loss_ic_history, label="IC loss")
+# plt.semilogy(loss_bc_history, label="BC loss")
+
+# plt.xlabel("Epoch")
+# plt.ylabel("Loss")
+# plt.title("Training loss")
+# plt.legend()
+# plt.grid(True)
+# plt.show()
+
+
+
+
+# #%%

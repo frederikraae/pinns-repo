@@ -1,0 +1,63 @@
+No GPU on this node, CUDA module not loaded
+epoch:    0 loss=9.352967e+01 pde=1.400737e+00 bc=1.149605e+01 ic=6.369438e+00
+epoch: 1500 loss=4.193748e-02 pde=1.063742e-02 bc=1.016859e-03 ic=9.881883e-04
+epoch: 3000 loss=2.049637e-02 pde=5.461742e-03 bc=5.996348e-04 ic=2.225939e-04
+epoch: 4500 loss=1.496212e-02 pde=3.093966e-03 bc=7.030554e-04 ic=4.329889e-04
+
+------------------------------------------------------------
+Sender: LSF System <lsfadmin@hpc.dtu.dk>
+Subject: Job 28617461: <tg_hpc_2> in cluster <dcc> Exited
+
+Job <tg_hpc_2> was submitted from host <n-62-30-2> by user <s213935> in cluster <dcc> at Tue Jun  9 11:52:44 2026
+Job was executed on host(s) <n-62-31-22>, in queue <hpc>, as user <s213935> in cluster <dcc> at Tue Jun  9 11:52:45 2026
+</zhome/15/6/166811> was used as the home directory.
+</zhome/15/6/166811/Documents/pinns-repo/PINN model> was used as the working directory.
+Started at Tue Jun  9 11:52:45 2026
+Terminated at Tue Jun  9 13:17:20 2026
+Results reported at Tue Jun  9 13:17:20 2026
+
+Your job looked like:
+
+------------------------------------------------------------
+# LSBATCH: User input
+#!/bin/bash
+#BSUB -J tg_hpc_2
+#BSUB -q hpc
+#BSUB -n 1
+#BSUB -W 01:30
+#BSUB -R "span[hosts=1]"
+#BSUB -R "rusage[mem=2GB]"
+#BSUB -o pinn_hpc_%J.out
+#BSUB -e pinn_hpc_%J.err
+
+
+source /dtu/projects/02613_2025/conda/conda_init.sh
+conda activate PINN
+
+python -u taylorgreen.py
+------------------------------------------------------------
+
+TERM_OWNER: job killed by owner.
+Exited with exit code 130.
+
+Resource usage summary:
+
+    CPU time :                                   5069.28 sec.
+    Max Memory :                                 1948 MB
+    Average Memory :                             1779.39 MB
+    Total Requested Memory :                     2048.00 MB
+    Delta Memory :                               100.00 MB
+    Max Swap :                                   -
+    Max Processes :                              4
+    Max Threads :                                5
+    Run time :                                   5074 sec.
+    Turnaround time :                            5076 sec.
+
+The output (if any) is above this job summary.
+
+
+
+PS:
+
+Read file <pinn_hpc_28617461.err> for stderr output of this job.
+
