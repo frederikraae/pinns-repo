@@ -15,3 +15,7 @@ Time elapsed: 255.06 min
 epoch: 9000 loss=8.481008e-03 pde=1.717257e-03 bc=5.145920e-04 ic=1.512554e-04
 Time elapsed: 297.12 min
 epoch: 10500 loss=1.242044e-02 pde=1.497877e-03 bc=1.182453e-03 ic=4.029098e-04
+Time elapsed: 340.83 min
+epoch: 12000 loss=1.532897e-02 pde=1.275237e-03 bc=1.767267e-03 ic=5.333845e-04
+Time elapsed: 384.50 min
+epoch: 13500 loss=5.446539e-03 pde=1.030402e-03 bc=3.712021e-04 ic=9.986425e-05

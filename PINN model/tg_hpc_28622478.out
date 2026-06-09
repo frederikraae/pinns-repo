@@ -1,0 +1,78 @@
+No GPU on this node, CUDA module not loaded
+Time elapsed: 0.07 min
+epoch:    0 loss=1.062782e+02 pde=1.624085e+00 bc=1.391176e+01 ic=6.369438e+00
+Time elapsed: 1.88 min
+epoch: 1500 loss=6.274888e-02 pde=1.247164e-02 bc=3.625826e-03 ic=1.440965e-03
+Time elapsed: 3.82 min
+epoch: 3000 loss=3.600878e-02 pde=7.142567e-03 bc=2.091716e-03 ic=8.245010e-04
+Time elapsed: 5.86 min
+epoch: 4500 loss=2.685277e-02 pde=4.500186e-03 bc=1.814748e-03 ic=8.556949e-04
+Time elapsed: 7.87 min
+epoch: 6000 loss=2.447977e-02 pde=4.469814e-03 bc=1.559759e-03 ic=6.543066e-04
+Time elapsed: 9.96 min
+epoch: 7500 loss=3.021127e-02 pde=4.502911e-03 bc=2.408108e-03 ic=9.323980e-04
+Time elapsed: 12.02 min
+epoch: 9000 loss=2.345220e-02 pde=3.192367e-03 bc=2.005105e-03 ic=7.699148e-04
+Time elapsed: 14.06 min
+epoch: 10500 loss=5.292034e-02 pde=2.492741e-03 bc=5.952545e-03 ic=3.135879e-03
+Time elapsed: 15.96 min
+epoch: 12000 loss=1.537233e-02 pde=2.630921e-03 bc=1.153737e-03 ic=3.421774e-04
+Time elapsed: 17.85 min
+epoch: 13500 loss=1.366099e-02 pde=1.895033e-03 bc=9.870529e-04 ic=6.081251e-04
+
+------------------------------------------------------------
+Sender: LSF System <lsfadmin@hpc.dtu.dk>
+Subject: Job 28622478: <tg_hpc_100> in cluster <dcc> Done
+
+Job <tg_hpc_100> was submitted from host <n-62-30-5> by user <s213935> in cluster <dcc> at Tue Jun  9 21:46:38 2026
+Job was executed on host(s) <n-62-31-24>, in queue <hpc>, as user <s213935> in cluster <dcc> at Tue Jun  9 21:46:40 2026
+</zhome/15/6/166811> was used as the home directory.
+</zhome/15/6/166811/Documents/pinns-repo/PINN model> was used as the working directory.
+Started at Tue Jun  9 21:46:40 2026
+Terminated at Tue Jun  9 22:06:35 2026
+Results reported at Tue Jun  9 22:06:35 2026
+
+Your job looked like:
+
+------------------------------------------------------------
+# LSBATCH: User input
+#!/bin/bash
+#BSUB -J tg_hpc_100
+#BSUB -q hpc
+#BSUB -n 1
+#BSUB -W 00:30
+#BSUB -R "span[hosts=1]"
+#BSUB -R "rusage[mem=1GB]"
+#BSUB -o tg_hpc_%J.out
+#BSUB -e tg_hpc_%J.err
+
+
+source /dtu/projects/02613_2025/conda/conda_init.sh
+conda activate PINN
+
+python -u taylorgreen.py 100
+------------------------------------------------------------
+
+Successfully completed.
+
+Resource usage summary:
+
+    CPU time :                                   1185.56 sec.
+    Max Memory :                                 334 MB
+    Average Memory :                             315.42 MB
+    Total Requested Memory :                     1024.00 MB
+    Delta Memory :                               690.00 MB
+    Max Swap :                                   -
+    Max Processes :                              4
+    Max Threads :                                5
+    Run time :                                   1195 sec.
+    Turnaround time :                            1197 sec.
+
+The output (if any) is above this job summary.
+
+
+
+PS:
+
+Read file <tg_hpc_28622478.err> for stderr output of this job.
+
