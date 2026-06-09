@@ -49,7 +49,7 @@ lam_bc = 5.0
 lam_ic = 5.0
 
 # Interior points (collacation)
-N = 5000
+N = 50
 
 loss_history = []
 loss_pde_history = []
@@ -76,6 +76,11 @@ for epoch in range(n_epoch):
     X_bc_right = torch.cat([pi_like,y,t], dim=1)
     X_bc_bottom = torch.cat([x,-pi_like,t], dim=1)
     X_bc_top = torch.cat([x,pi_like,t], dim=1)
+
+    X_bc_left.requires_grad_(True)
+    X_bc_right.requires_grad_(True)
+    X_bc_bottom.requires_grad_(True)
+    X_bc_top.requires_grad_(True)
 
     # Forward pass
     G = net(X)
@@ -171,7 +176,107 @@ for epoch in range(n_epoch):
     loss_bc_x = torch.mean((u_bc_left - u_bc_right)**2) + torch.mean((v_bc_left - v_bc_right)**2) + torch.mean((p_bc_left - p_bc_right)**2)
     loss_bc_y = torch.mean((u_bc_bottom - u_bc_top)**2) + torch.mean((v_bc_bottom - v_bc_top)**2) + torch.mean((p_bc_bottom - p_bc_top)**2)
 
-    loss_bc = loss_bc_x + loss_bc_y
+    grad_u_bc_left = torch.autograd.grad(
+        u_bc_left, X_bc_left,
+        grad_outputs=torch.ones_like(u_bc_left),
+        create_graph=True
+    )[0]
+
+    u_x_bc_left = grad_u_bc_left[:, 0:1]
+
+    grad_u_bc_right = torch.autograd.grad(
+        u_bc_right, X_bc_right,
+        grad_outputs=torch.ones_like(u_bc_right),
+        create_graph=True
+    )[0]
+
+    u_x_bc_right = grad_u_bc_right[:, 0:1]
+
+    grad_u_bc_bottom = torch.autograd.grad(
+        u_bc_bottom, X_bc_bottom,
+        grad_outputs=torch.ones_like(u_bc_bottom),
+        create_graph=True
+    )[0]
+
+    u_y_bc_bottom = grad_u_bc_bottom[:, 1:2]
+
+    grad_u_bc_top = torch.autograd.grad(
+        u_bc_top, X_bc_top,
+        grad_outputs=torch.ones_like(u_bc_top),
+        create_graph=True
+    )[0]
+
+    u_y_bc_top = grad_u_bc_top[:, 1:2]
+
+
+    grad_v_bc_left = torch.autograd.grad(
+        v_bc_left, X_bc_left,
+        grad_outputs=torch.ones_like(v_bc_left),
+        create_graph=True
+    )[0]
+
+    v_x_bc_left = grad_v_bc_left[:, 0:1]
+
+    grad_v_bc_right = torch.autograd.grad(
+        v_bc_right, X_bc_right,
+        grad_outputs=torch.ones_like(v_bc_right),
+        create_graph=True
+    )[0]
+
+    v_x_bc_right = grad_v_bc_right[:, 0:1]
+
+    grad_v_bc_bottom = torch.autograd.grad(
+        v_bc_bottom, X_bc_bottom,
+        grad_outputs=torch.ones_like(v_bc_bottom),
+        create_graph=True
+    )[0]
+
+    v_y_bc_bottom = grad_v_bc_bottom[:, 1:2]
+
+    grad_v_bc_top = torch.autograd.grad(
+        v_bc_top, X_bc_top,
+        grad_outputs=torch.ones_like(v_bc_top),
+        create_graph=True
+    )[0]
+
+    v_y_bc_top = grad_v_bc_top[:, 1:2]
+
+    grad_p_bc_left = torch.autograd.grad(
+        p_bc_left, X_bc_left,
+        grad_outputs=torch.ones_like(p_bc_left),
+        create_graph=True
+    )[0]
+
+    p_x_bc_left = grad_p_bc_left[:, 0:1]
+
+    grad_p_bc_right = torch.autograd.grad(
+        p_bc_right, X_bc_right,
+        grad_outputs=torch.ones_like(p_bc_right),
+        create_graph=True
+    )[0]
+
+    p_x_bc_right = grad_p_bc_right[:, 0:1]
+
+    grad_p_bc_bottom = torch.autograd.grad(
+        p_bc_bottom, X_bc_bottom,
+        grad_outputs=torch.ones_like(p_bc_bottom),
+        create_graph=True
+    )[0]
+
+    p_y_bc_bottom = grad_p_bc_bottom[:, 1:2]
+
+    grad_p_bc_top = torch.autograd.grad(
+        p_bc_top, X_bc_top,
+        grad_outputs=torch.ones_like(p_bc_top),
+        create_graph=True
+    )[0]
+
+    p_y_bc_top = grad_p_bc_top[:, 1:2]
+
+    loss_bc_grad_x = torch.mean((u_x_bc_left - u_x_bc_right)**2) + torch.mean((v_x_bc_left - v_x_bc_right)**2) + torch.mean((p_x_bc_left - p_x_bc_right)**2)
+    loss_bc_grad_y = torch.mean((u_y_bc_bottom - u_y_bc_top)**2) + torch.mean((v_y_bc_bottom - v_y_bc_top)**2) + torch.mean((p_y_bc_bottom - p_y_bc_top)**2)
+
+    loss_bc = loss_bc_x + loss_bc_y + loss_bc_grad_x + loss_bc_grad_y
    
     # IC loss
     G_ic = net(X_ic)
@@ -291,7 +396,7 @@ np.savez(
 
 
 
-# # Plot 1
+# # Plot 2
 # fig, axes = plt.subplots(1, 3, figsize=(15, 4), constrained_layout=True)
 
 # # Exact
@@ -309,7 +414,7 @@ np.savez(
 # fig.colorbar(cf2, ax=axes[1])
 
 
-# # Plot 1
+# # Plot 3
 # fig, axes = plt.subplots(1, 3, figsize=(15, 4), constrained_layout=True)
 
 # # Exact
@@ -344,6 +449,4 @@ np.savez(
 # plt.show()
 
 
-
-
-# #%%
+#%%
