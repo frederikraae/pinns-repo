@@ -70,7 +70,7 @@ def run_seed(seed):
              [[], []],
              [[], []]]
 
-    optimizer = torch.optim.Adam(net.parameters(), lr=1e-4)
+    optimizer = torch.optim.Adam(net.parameters(), lr=1e-3)
 
     if w_softa:
         softadapt_object = LossWeightedSoftAdapt(beta=0.1, accuracy_order=5)
@@ -85,7 +85,7 @@ def run_seed(seed):
     lam_ic = 5.0
 
     # Interior points (collacation)
-    N = 100
+    N = 50
 
     # Training loop
     n_epoch = 10_000

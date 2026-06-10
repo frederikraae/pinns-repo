@@ -82,10 +82,10 @@ def run_seed(seed):
     lam_balance = 0.05
 
     # Interior points (collacation)
-    N = 100
+    N = 50
 
     # Training loop
-    n_epoch = 15_000
+    n_epoch = 10_000
 
     for epoch in range(n_epoch):
         optimizer.zero_grad()
