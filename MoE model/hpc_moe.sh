@@ -6,8 +6,8 @@
 #BSUB -R "select[model==XeonGold6226R]"
 #BSUB -R "span[hosts=1]"
 #BSUB -R "rusage[mem=500MB]"
-#BSUB -o moe_hpc_%J.out
-#BSUB -e moe_hpc_%J.err
+#BSUB -o logs/moe_hpc_%J.out
+#BSUB -e logs/moe_hpc_%J.err
 
 
 source /dtu/projects/02613_2025/conda/conda_init.sh

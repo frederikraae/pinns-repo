@@ -16,11 +16,12 @@ plt.rcParams.update({
 })
 
 # Baseline file
-baseline_file = "pinnTaylorGreen.npz"
+baseline_file = "pinnTaylorGreen_50.npz"
 
 # Files to compare against baseline
 files = [
-    "MoETaylorGreen.npz",
+    "MoETaylorGreen_50.npz",
+    "pinnTaylorGreen_softa_50.npz"
 ]
 
 N_LEVELS = 15
@@ -319,7 +320,7 @@ print("-" * 70)
 # ------------------------------------------------------------
 
 moe_files = [
-    "MoETaylorGreen.npz",
+    "MoETaylorGreen_50.npz",
 ]
 
 for file in moe_files:
