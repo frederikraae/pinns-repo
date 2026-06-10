@@ -507,7 +507,7 @@ if __name__ == "__main__":
 
         gate_weights_n += result["gate_weights"] / n
 
-    filename = "MoETaylorGreen.npz"
+    filename = "MoETaylorGreen_50seeds.npz"
 
     np.savez(
         filename,

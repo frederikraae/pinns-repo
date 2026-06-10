@@ -1,8 +1,8 @@
 #!/bin/bash
-#BSUB -J tg_hpc
+#BSUB -J tg_hpc_50
 #BSUB -q hpc
 #BSUB -n 16
-#BSUB -W 03:00
+#BSUB -W 09:00
 #BSUB -R "span[hosts=1]"
 #BSUB -R "rusage[mem=1500MB]"
 #BSUB -N
@@ -13,4 +13,4 @@
 source /dtu/projects/02613_2025/conda/conda_init.sh
 conda activate PINN
 
-python -u HPCtaylorgreen.py 16 16 false
+python -u HPCtaylorgreen.py 16 50 false

@@ -512,7 +512,7 @@ if __name__ == "__main__":
         val_p_l2 += np.array(result["val_p_l2"]) / n
         val_p_lmax += np.array(result["val_p_lmax"]) / n
 
-    filename = "pinnTaylorGreen_softa.npz" if w_softa else "pinnTaylorGreen.npz"
+    filename = "pinnTaylorGreen_softa_50seeds.npz" if w_softa else "pinnTaylorGreen_50seeds.npz"
 
     np.savez(
         filename,
