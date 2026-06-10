@@ -8,6 +8,7 @@ files = [
     "pinnTaylorGreen_100.npz",
     "pinnTaylorGreen_1000.npz",
     "pinnTaylorGreen_2000.npz",
+    "pinnTaylorGreen_5000.npz",
 ]
 
 N_LEVELS = 15
