@@ -1,0 +1,313 @@
+#%%
+
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.colors import TwoSlopeNorm
+
+# Global font sizes
+plt.rcParams.update({
+    "font.size": 14,
+    "axes.titlesize": 16,
+    "axes.labelsize": 14,
+    "xtick.labelsize": 12,
+    "ytick.labelsize": 12,
+    "legend.fontsize": 10,
+    "figure.titlesize": 18,
+})
+
+# Baseline file
+baseline_file = "pinnTaylorGreen.npz"
+
+# Files to compare against baseline
+files = [
+    "pinnTaylorGreen_softa.npz",
+]
+
+N_LEVELS = 15
+
+# Load datasets
+baseline_data = np.load(baseline_file)
+datasets = [np.load(file) for file in files]
+
+#%%
+
+# ------------------------------------------------------------
+# Find common color limits for contour plots
+# ------------------------------------------------------------
+
+all_datasets = [baseline_data] + datasets
+
+u_min, u_max = np.inf, -np.inf
+v_min, v_max = np.inf, -np.inf
+p_min, p_max = np.inf, -np.inf
+e_max = 0.0
+
+for data in all_datasets:
+    u_pred_n = data["u_pred_n"]
+    v_pred_n = data["v_pred_n"]
+    p_pred_n = data["p_pred_n"]
+
+    u_exact_n = data["u_exact_n"]
+    v_exact_n = data["v_exact_n"]
+    p_exact_n = data["p_exact_n"]
+
+    u_min = min(u_min, u_pred_n.min(), u_exact_n.min())
+    u_max = max(u_max, u_pred_n.max(), u_exact_n.max())
+
+    v_min = min(v_min, v_pred_n.min(), v_exact_n.min())
+    v_max = max(v_max, v_pred_n.max(), v_exact_n.max())
+
+    p_min = min(p_min, p_pred_n.min(), p_exact_n.min())
+    p_max = max(p_max, p_pred_n.max(), p_exact_n.max())
+
+    u_e_max = np.max(np.abs(u_pred_n - u_exact_n))
+    v_e_max = np.max(np.abs(v_pred_n - v_exact_n))
+    p_e_max = np.max(np.abs(p_pred_n - p_exact_n))
+
+    e_max = max(e_max, u_e_max, v_e_max, p_e_max)
+
+levels_u = np.linspace(u_min, u_max, N_LEVELS)
+levels_v = np.linspace(v_min, v_max, N_LEVELS)
+levels_p = np.linspace(p_min, p_max, N_LEVELS)
+
+e_levels = np.linspace(-e_max, e_max, N_LEVELS)
+
+e_norm = TwoSlopeNorm(
+    vmin=-e_max,
+    vcenter=0.0,
+    vmax=e_max
+)
+
+#%%
+
+# ------------------------------------------------------------
+# Contour plots: exact, prediction, error
+# ------------------------------------------------------------
+
+def plot_npz_file(file):
+    data = np.load(file)
+
+    Xn = data["Xn"]
+    Yn = data["Yn"]
+
+    u_pred_n = data["u_pred_n"]
+    v_pred_n = data["v_pred_n"]
+    p_pred_n = data["p_pred_n"]
+
+    u_exact_n = data["u_exact_n"]
+    v_exact_n = data["v_exact_n"]
+    p_exact_n = data["p_exact_n"]
+
+    fields = [
+        ("u", u_exact_n, u_pred_n, levels_u),
+        ("v", v_exact_n, v_pred_n, levels_v),
+        ("p", p_exact_n, p_pred_n, levels_p),
+    ]
+
+    for name, exact, pred, levels in fields:
+        fig, axes = plt.subplots(
+            1,
+            3,
+            figsize=(15, 4),
+            constrained_layout=True
+        )
+
+        fig.suptitle(f"{file}")
+
+        cf1 = axes[0].contourf(Xn, Yn, exact, levels=levels)
+        axes[0].set_title(f"Exact solution {name}")
+        axes[0].set_xlabel("x")
+        axes[0].set_ylabel("y")
+        fig.colorbar(cf1, ax=axes[0])
+
+        cf2 = axes[1].contourf(Xn, Yn, pred, levels=levels)
+        axes[1].set_title(f"PINN prediction {name}")
+        axes[1].set_xlabel("x")
+        axes[1].set_ylabel("y")
+        fig.colorbar(cf2, ax=axes[1])
+
+        error = pred - exact
+
+        cf3 = axes[2].contourf(
+            Xn,
+            Yn,
+            error,
+            levels=e_levels,
+            norm=e_norm,
+            cmap="coolwarm"
+        )
+        axes[2].set_title(f"Error {name}: prediction - exact")
+        axes[2].set_xlabel("x")
+        axes[2].set_ylabel("y")
+        fig.colorbar(cf3, ax=axes[2])
+
+        plt.show()
+
+        L_max = np.max(np.abs(error))
+        L_2 = np.linalg.norm(error)
+
+        print(f"{file} | {name} L_max: {L_max:.2e}")
+        print(f"{file} | {name} L_2:    {L_2:.2e}")
+
+
+plot_npz_file(baseline_file)
+
+for file in files:
+    plot_npz_file(file)
+
+#%%
+
+# ------------------------------------------------------------
+# Final error per seed: L_inf and L2, plotted with baseline
+# ------------------------------------------------------------
+
+seeds = np.arange(len(baseline_data["u_L_max"]))
+
+components = [
+    ("u", "u_L_max", "u_L_2"),
+    ("v", "v_L_max", "v_L_2"),
+    ("p", "p_L_max", "p_L_2"),
+]
+
+for comp_name, key_lmax, key_l2 in components:
+    fig, ax = plt.subplots(
+        1,
+        2,
+        figsize=(12, 4),
+        constrained_layout=True
+    )
+
+    # Baseline
+    ax[0].plot(
+        seeds,
+        baseline_data[key_lmax],
+        label=f"Baseline: {baseline_file}",
+        linewidth=2.5
+    )
+    ax[0].axhline(
+        np.mean(baseline_data[key_lmax]),
+        linestyle="--",
+        label=fr"Mean baseline: {np.mean(baseline_data[key_lmax]):.2e}"
+    )
+
+    ax[1].plot(
+        seeds,
+        baseline_data[key_l2],
+        label=f"Baseline: {baseline_file}",
+        linewidth=2.5
+    )
+    ax[1].axhline(
+        np.mean(baseline_data[key_l2]),
+        linestyle="--",
+        label=fr"Mean baseline: {np.mean(baseline_data[key_l2]):.2e}"
+    )
+
+    # Other files
+    for file, data in zip(files, datasets):
+        ax[0].plot(seeds, data[key_lmax], label=file)
+        ax[0].axhline(
+            np.mean(data[key_lmax]),
+            linestyle="--",
+            label=fr"Mean {file}: {np.mean(data[key_lmax]):.2e}"
+        )
+
+        ax[1].plot(seeds, data[key_l2], label=file)
+        ax[1].axhline(
+            np.mean(data[key_l2]),
+            linestyle="--",
+            label=fr"Mean {file}: {np.mean(data[key_l2]):.2e}"
+        )
+
+    ax[0].set_xlabel("Seed")
+    ax[0].set_ylabel(r"$L_\infty$ error")
+    ax[0].set_title(fr"{comp_name}: $L_\infty$ vs seed")
+    ax[0].grid(True)
+    ax[0].legend()
+
+    ax[1].set_xlabel("Seed")
+    ax[1].set_ylabel(r"$L_2$ error")
+    ax[1].set_title(fr"{comp_name}: $L_2$ vs seed")
+    ax[1].grid(True)
+    ax[1].legend()
+
+    plt.show()
+
+#%%
+
+# ------------------------------------------------------------
+# Validation errors vs epoch
+# ------------------------------------------------------------
+
+val_components = [
+    ("u", "val_u_l2", "val_u_lmax"),
+    ("v", "val_v_l2", "val_v_lmax"),
+    ("p", "val_p_l2", "val_p_lmax"),
+]
+
+for comp_name, key_l2, key_lmax in val_components:
+    epochs = np.arange(len(baseline_data[key_l2]))
+
+    fig, ax = plt.subplots(
+        1,
+        2,
+        figsize=(12, 4),
+        constrained_layout=True
+    )
+
+    # Baseline
+    ax[0].semilogy(
+        epochs,
+        baseline_data[key_lmax],
+        label=f"Baseline: {baseline_file}",
+        linewidth=2.5
+    )
+    ax[1].semilogy(
+        epochs,
+        baseline_data[key_l2],
+        label=f"Baseline: {baseline_file}",
+        linewidth=2.5
+    )
+
+    # Other files
+    for file, data in zip(files, datasets):
+        ax[0].semilogy(epochs, data[key_lmax], label=file)
+        ax[1].semilogy(epochs, data[key_l2], label=file)
+
+    ax[0].set_xlabel("Epoch")
+    ax[0].set_ylabel(r"$L_\infty$ validation error")
+    ax[0].set_title(fr"{comp_name}: validation $L_\infty$")
+    ax[0].grid(True, which="both")
+    ax[0].legend()
+
+    ax[1].set_xlabel("Epoch")
+    ax[1].set_ylabel(r"$L_2$ validation error")
+    ax[1].set_title(fr"{comp_name}: validation $L_2$")
+    ax[1].grid(True, which="both")
+    ax[1].legend()
+
+    plt.show()
+
+#%%
+
+# ------------------------------------------------------------
+# Print summary table
+# ------------------------------------------------------------
+
+print("\nSummary of mean final errors")
+print("-" * 70)
+print(f"{'File':<28} {'Component':<10} {'Mean L_inf':<15} {'Mean L2':<15}")
+print("-" * 70)
+
+for file, data in [(baseline_file, baseline_data)] + list(zip(files, datasets)):
+    for comp_name in ["u", "v", "p"]:
+        mean_lmax = np.mean(data[f"{comp_name}_L_max"])
+        mean_l2 = np.mean(data[f"{comp_name}_L_2"])
+
+        print(
+            f"{file:<28} "
+            f"{comp_name:<10} "
+            f"{mean_lmax:<15.4e} "
+            f"{mean_l2:<15.4e}"
+        )
+
+print("-" * 70)

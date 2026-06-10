@@ -437,7 +437,7 @@ if __name__ == "__main__":
 
     # Mean fields over all seeds
     Xn = results[0]["X"]
-    Yn = ["Y"]
+    Yn = results[0]["Y"]
 
     u_pred_n = np.zeros_like(results[0]["u_pred"])
     v_pred_n = np.zeros_like(results[0]["v_pred"])
