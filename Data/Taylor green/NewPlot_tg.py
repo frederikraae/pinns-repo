@@ -16,13 +16,19 @@ plt.rcParams.update({
 })
 
 # Baseline file
-baseline_file = "pinnTaylorGreen_50.npz"
+baseline_file = "pinnTaylorGreen_16seeds.npz"
 
 # Files to compare against baseline
 files = [
-    "MoETaylorGreen_50.npz",
-    "pinnTaylorGreen_softa_50.npz"
+    "MoETaylorGreen_16seeds.npz",
+    "pinnTaylorGreen_softa_16seeds.npz"
 ]
+
+model_colors = {
+    baseline_file: "tab:blue",
+    "MoETaylorGreen_16seeds.npz": "tab:orange",
+    "pinnTaylorGreen_softa_16seeds.npz": "tab:green",
+}
 
 N_LEVELS = 15
 
@@ -178,52 +184,64 @@ for comp_name, key_lmax, key_l2 in components:
     )
 
     # Baseline
+    color = model_colors[baseline_file]
+
     ax[0].plot(
         seeds,
         baseline_data[key_lmax],
         label=f"Baseline: {baseline_file}",
-        linewidth=2.5
+        linewidth=2.5,
+        color=color
     )
     ax[0].axhline(
         np.mean(baseline_data[key_lmax]),
         linestyle="--",
-        label="Mean baseline"
+        label="Mean baseline",
+        color=color
     )
 
     ax[1].plot(
         seeds,
         baseline_data[key_l2],
         label=f"Baseline: {baseline_file}",
-        linewidth=2.5
+        linewidth=2.5,
+        color=color
     )
     ax[1].axhline(
         np.mean(baseline_data[key_l2]),
         linestyle="--",
-        label="Mean baseline"
+        label="Mean baseline",
+        color=color
     )
 
     # Other files
     for file, data in zip(files, datasets):
+        color = model_colors[file]
+
         ax[0].plot(
             seeds,
             data[key_lmax],
-            label=file
+            label=file,
+            color=color
         )
         ax[0].axhline(
             np.mean(data[key_lmax]),
             linestyle="--",
-            label=f"Mean {file}"
+            label=f"Mean {file}",
+            color=color
         )
 
         ax[1].plot(
             seeds,
             data[key_l2],
-            label=file
+            label=file,
+            color=color
         )
         ax[1].axhline(
             np.mean(data[key_l2]),
             linestyle="--",
-            label=f"Mean {file}"
+            label=f"Mean {file}",
+            color=color
         )
 
     ax[0].set_xlabel("Seed")
@@ -309,6 +327,77 @@ for comp_name, key_l2, key_lmax in val_components:
 #%%
 
 # ------------------------------------------------------------
+# Bar plots of mean final norms for each variable
+# ------------------------------------------------------------
+
+model_files = [baseline_file] + files
+model_data = [baseline_data] + datasets
+model_labels = model_files
+
+components = ["u", "v", "p"]
+x = np.arange(len(components))
+width = 0.25
+
+# Mean L_inf values
+fig, ax = plt.subplots(figsize=(9, 4))
+
+for i, (label, data) in enumerate(zip(model_labels, model_data)):
+    mean_lmax = [
+        np.mean(data[f"{comp}_L_max"])
+        for comp in components
+    ]
+
+    ax.bar(
+        x + (i - 1) * width,
+        mean_lmax,
+        width,
+        label=label,
+        color=model_colors[model_files[i]]
+    )
+
+ax.set_xlabel("Variable")
+ax.set_ylabel(r"Mean $L_\infty$ error")
+ax.set_title(r"Mean final $L_\infty$ error")
+ax.set_xticks(x)
+ax.set_xticklabels(components)
+ax.grid(True, axis="y")
+ax.legend()
+
+plt.tight_layout()
+plt.show()
+
+
+# Mean L2 values
+fig, ax = plt.subplots(figsize=(9, 4))
+
+for i, (label, data) in enumerate(zip(model_labels, model_data)):
+    mean_l2 = [
+        np.mean(data[f"{comp}_L_2"])
+        for comp in components
+    ]
+
+    ax.bar(
+        x + (i - 1) * width,
+        mean_l2,
+        width,
+        label=label,
+        color=model_colors[model_files[i]]
+    )
+
+ax.set_xlabel("Variable")
+ax.set_ylabel(r"Mean $L_2$ error")
+ax.set_title(r"Mean final $L_2$ error")
+ax.set_xticks(x)
+ax.set_xticklabels(components)
+ax.grid(True, axis="y")
+ax.legend()
+
+plt.tight_layout()
+plt.show()
+
+#%%
+
+# ------------------------------------------------------------
 # Print summary table
 # ------------------------------------------------------------
 
@@ -338,7 +427,7 @@ print("-" * 70)
 # ------------------------------------------------------------
 
 moe_files = [
-    "MoETaylorGreen_50.npz",
+    "MoETaylorGreen_16seeds.npz",
 ]
 
 for file in moe_files:
