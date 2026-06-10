@@ -6,8 +6,7 @@ from torch import sin, cos, exp, pi
 import multiprocessing as mp
 from time import perf_counter
 
-from network import PINN
-from softadapt import LossWeightedSoftAdapt
+from new_model import MoEPINN
 
 # Parameters
 V0 = 1.0
@@ -30,12 +29,16 @@ def run_seed(seed):
     torch.manual_seed(seed)
 
     # Initialize network and define optimizer
-    net = PINN(
-        in_dim=3,
-        out_dim=3,
-        hidden_dim=128,
-        hidden_layers=8
-    )
+    net = MoEPINN(
+    in_dim=3,
+    out_dim=3,
+    num_experts=4,
+    expert_hidden_dim=64,
+    expert_hidden_layers=4,
+    gate_hidden_dim=32,
+    gate_hidden_layers=4,
+    temperature=1.0
+)
 
     # Initial points
     N_ic = 2000
@@ -70,25 +73,19 @@ def run_seed(seed):
              [[], []],
              [[], []]]
 
-    optimizer = torch.optim.Adam(net.parameters(), lr=1e-4)
-
-    if w_softa:
-        softadapt_object = LossWeightedSoftAdapt(beta=0.1, accuracy_order=5)
-        window = 25
-        loss_hist_1 = []
-        loss_hist_2 = []
-        loss_hist_3 = []
+    optimizer = torch.optim.Adam(net.parameters(), lr=1e-3)
 
     # Loss term weights
     lam_pde = 3.0
     lam_bc = 5.0
     lam_ic = 5.0
+    lam_balance = 0.05
 
     # Interior points (collacation)
     N = 100
 
     # Training loop
-    n_epoch = 10_000
+    n_epoch = 15_000
 
     for epoch in range(n_epoch):
         optimizer.zero_grad()
@@ -114,7 +111,7 @@ def run_seed(seed):
         X_bc_top.requires_grad_(True)
 
         # Forward pass
-        G = net(X)
+        G, gate_weights, *_ = net(X)
 
         u = G[:, 0:1]
         v = G[:, 1:2]
@@ -183,10 +180,10 @@ def run_seed(seed):
         loss_pde = loss_pde_eq1 + loss_pde_eq2 + loss_pde_eq3
 
         # BC loss
-        G_bc_left = net(X_bc_left)
-        G_bc_right = net(X_bc_right)
-        G_bc_bottom = net(X_bc_bottom)
-        G_bc_top = net(X_bc_top)
+        G_bc_left, *_ = net(X_bc_left)
+        G_bc_right, *_ = net(X_bc_right)
+        G_bc_bottom, *_ = net(X_bc_bottom)
+        G_bc_top, *_ = net(X_bc_top)
 
         u_bc_left = G_bc_left[:, 0:1]
         v_bc_left = G_bc_left[:, 1:2]
@@ -310,7 +307,7 @@ def run_seed(seed):
         loss_bc = loss_bc_x + loss_bc_y + loss_bc_grad_x + loss_bc_grad_y
     
         # IC loss
-        G_ic = net(X_ic)
+        G_ic, *_ = net(X_ic)
 
         u_ic = G_ic[:, 0:1]
         v_ic = G_ic[:, 1:2]
@@ -322,29 +319,22 @@ def run_seed(seed):
 
         loss_ic = loss_ic_eq1 + loss_ic_eq2 + loss_ic_eq3
 
-        if w_softa:
+        # Load balance (gate loss)
+        gate_weights_flat = gate_weights.reshape(-1, net.num_experts)
 
-            loss_hist_1.append(loss_pde.item())
-            loss_hist_2.append(loss_bc.item())
-            loss_hist_3.append(loss_ic.item())
-
-            if epoch >= window and epoch % window == 0:
-                weights = softadapt_object.get_component_weights(
-                    torch.tensor(loss_hist_1[-window:], dtype=torch.float32),
-                    torch.tensor(loss_hist_2[-window:], dtype=torch.float32),
-                    torch.tensor(loss_hist_3[-window:], dtype=torch.float32)
-                )
-                lam_pde, lam_bc, lam_ic = [w.item() for w in weights]
+        mean_gate = torch.mean(gate_weights_flat, dim=0)
+        K = net.num_experts
+        loss_balance = K * torch.sum(mean_gate**2)
 
         # Total loss
-        loss = lam_pde * loss_pde + lam_bc * loss_bc + lam_ic * loss_ic
+        loss = lam_pde * loss_pde + lam_bc * loss_bc + lam_ic * loss_ic + lam_balance * loss_balance
 
         loss.backward()
         optimizer.step()
 
         # Validation error on fixed validation grid
         with torch.no_grad():
-            G_pred = net(XYT_val)
+            G_pred, *_ = net(XYT_val)
         
             u_pred = G_pred[:, 0:1]
             v_pred = G_pred[:, 1:2]
@@ -377,7 +367,7 @@ def run_seed(seed):
     net.eval()
 
     with torch.no_grad():
-        G_pred = net(XYT)
+        G_pred, gate_weights, *_ = net(XYT)
         
         u_pred = G_pred[:, 0:1]
         v_pred = G_pred[:, 1:2]
@@ -386,6 +376,8 @@ def run_seed(seed):
         u_exact = u_analytical(XYT[:,0:1], XYT[:,1:2], XYT[:,2:3])
         v_exact = v_analytical(XYT[:,0:1], XYT[:,1:2], XYT[:,2:3])
         p_exact = p_analytical(XYT[:,0:1], XYT[:,1:2], XYT[:,2:3])
+
+    gate_weights = gate_weights.reshape(n_test, n_test, net.num_experts)
 
     u_pred = u_pred.reshape(n_test, n_test)
     v_pred = v_pred.reshape(n_test, n_test)
@@ -411,6 +403,7 @@ def run_seed(seed):
         "val_v_lmax" : norms[1][1],
         "val_p_l2" : norms[2][0],
         "val_p_lmax" : norms[2][1],
+        "gate_weights": gate_weights.numpy(),
     }
 
 if __name__ == "__main__":
@@ -424,8 +417,6 @@ if __name__ == "__main__":
     n_procs = min(max_procs, len(seeds))
 
     print(f"--- Running {NUMBER_OF_SEEDS} seeds with {n_procs} processes ---")
-
-    w_softa = sys.argv[3].lower() in ["true", "1", "yes", "y"] if len(sys.argv) > 3 else False
 
     start = perf_counter()
 
@@ -471,6 +462,8 @@ if __name__ == "__main__":
     val_p_l2 = np.zeros_like(np.array(results[0]["val_p_l2"]))
     val_p_lmax = np.zeros_like(np.array(results[0]["val_p_lmax"]))
 
+    gate_weights_n = np.zeros_like(results[0]["gate_weights"])
+
     for i, result in enumerate(results):
 
         # Average predictions
@@ -512,7 +505,9 @@ if __name__ == "__main__":
         val_p_l2 += np.array(result["val_p_l2"]) / n
         val_p_lmax += np.array(result["val_p_lmax"]) / n
 
-    filename = "pinnTaylorGreen_softa.npz" if w_softa else "pinnTaylorGreen.npz"
+        gate_weights_n += result["gate_weights"] / n
+
+    filename = "MoETaylorGreen.npz"
 
     np.savez(
         filename,
@@ -546,7 +541,9 @@ if __name__ == "__main__":
         val_v_lmax=val_v_lmax,
 
         val_p_l2=val_p_l2,
-        val_p_lmax=val_p_lmax
+        val_p_lmax=val_p_lmax,
+
+        gate_weights_n = gate_weights_n
     )
 
     sec_per_seed = elapsed / NUMBER_OF_SEEDS

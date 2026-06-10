@@ -57,7 +57,7 @@ lam_ic = 5.0
 lam_balance = 0.05
 
 # Interior points (collacation)
-N = 100 # int(sys.argv[1])
+N = 100
 
 loss_history = []
 loss_pde_history = []
