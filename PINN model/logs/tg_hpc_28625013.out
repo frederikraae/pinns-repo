@@ -1,2 +1,7 @@
 No GPU on this node, CUDA module not loaded
 --- Running 16 seeds with 16 processes ---
+
+N = 16 seeds
+Elapsed: 9793.90 s
+Per seed: 612.12 s
+Saved .npz
