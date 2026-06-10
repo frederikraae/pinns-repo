@@ -85,7 +85,7 @@ def run_seed(seed):
     lam_ic = 5.0
 
     # Interior points (collacation)
-    N = 1000
+    N = 100
 
     # Training loop
     n_epoch = 10_000
