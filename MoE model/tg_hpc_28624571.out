@@ -1,0 +1,64 @@
+No GPU on this node, CUDA module not loaded
+--- Running 4 seeds with 4 processes ---
+
+N = 4 seeds
+Elapsed: 1259.46 s
+Per seed: 314.87 s
+Saved .npz
+
+------------------------------------------------------------
+Sender: LSF System <lsfadmin@hpc.dtu.dk>
+Subject: Job 28624571: <tg_moe_hpc> in cluster <dcc> Done
+
+Job <tg_moe_hpc> was submitted from host <n-62-30-8> by user <s213935> in cluster <dcc> at Wed Jun 10 13:24:40 2026
+Job was executed on host(s) <4*n-62-30-24>, in queue <hpc>, as user <s213935> in cluster <dcc> at Wed Jun 10 13:24:41 2026
+</zhome/15/6/166811> was used as the home directory.
+</zhome/15/6/166811/Documents/pinns-repo/MoE model> was used as the working directory.
+Started at Wed Jun 10 13:24:41 2026
+Terminated at Wed Jun 10 13:45:46 2026
+Results reported at Wed Jun 10 13:45:46 2026
+
+Your job looked like:
+
+------------------------------------------------------------
+# LSBATCH: User input
+#!/bin/bash
+#BSUB -J tg_moe_hpc
+#BSUB -q hpc
+#BSUB -n 4
+#BSUB -W 00:40
+#BSUB -R "span[hosts=1]"
+#BSUB -R "rusage[mem=500MB]"
+#BSUB -o tg_hpc_%J.out
+#BSUB -e tg_hpc_%J.err
+
+
+source /dtu/projects/02613_2025/conda/conda_init.sh
+conda activate PINN
+
+python -u HPCtgMoE.py 4 4
+------------------------------------------------------------
+
+Successfully completed.
+
+Resource usage summary:
+
+    CPU time :                                   4691.85 sec.
+    Max Memory :                                 930 MB
+    Average Memory :                             815.83 MB
+    Total Requested Memory :                     2000.00 MB
+    Delta Memory :                               1070.00 MB
+    Max Swap :                                   -
+    Max Processes :                              8
+    Max Threads :                                12
+    Run time :                                   1265 sec.
+    Turnaround time :                            1266 sec.
+
+The output (if any) is above this job summary.
+
+
+
+PS:
+
+Read file <tg_hpc_28624571.err> for stderr output of this job.
+
