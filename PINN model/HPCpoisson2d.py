@@ -233,7 +233,7 @@ if __name__ == "__main__":
 
     if w_softa:
         np.savez(
-            "pinn2dpos_expa_softa_{NUMBER_OF_SEEDS}seeds.npz",
+            f"pinn2dpos_expa_softa_{NUMBER_OF_SEEDS}seeds.npz",
             Xn=Xn,
             Yn=Yn,
             u_pred_n=u_pred_n,
@@ -246,7 +246,7 @@ if __name__ == "__main__":
         )
     else:
         np.savez(
-            "pinn2dpos_expanded_{NUMBER_OF_SEEDS}seeds.npz",
+            f"pinn2dpos_expanded_{NUMBER_OF_SEEDS}seeds.npz",
             Xn=Xn,
             Yn=Yn,
             u_pred_n=u_pred_n,
