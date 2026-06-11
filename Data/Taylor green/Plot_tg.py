@@ -30,6 +30,12 @@ model_colors = {
     "pinnTaylorGreen_softa_16seeds.npz": "tab:green",
 }
 
+plot_name = {
+    baseline_file: "PINN",
+    "MoETaylorGreen_16seeds.npz": "MoE-PINN",
+    "pinnTaylorGreen_softa_16seeds.npz": "PINN med SoftAdapt",
+}
+
 N_LEVELS = 15
 
 # Load datasets
@@ -47,7 +53,7 @@ all_datasets = [baseline_data] + datasets
 u_min, u_max = np.inf, -np.inf
 v_min, v_max = np.inf, -np.inf
 p_min, p_max = np.inf, -np.inf
-e_max = 0.0
+e_min, e_max = np.zeros(len(all_datasets)), np.zeros(len(all_datasets))
 
 for data in all_datasets:
     u_pred_n = data["u_pred_n"]
@@ -67,23 +73,67 @@ for data in all_datasets:
     p_min = min(p_min, p_pred_n.min(), p_exact_n.min())
     p_max = max(p_max, p_pred_n.max(), p_exact_n.max())
 
-    u_e_max = np.max(np.abs(u_pred_n - u_exact_n))
-    v_e_max = np.max(np.abs(v_pred_n - v_exact_n))
-    p_e_max = np.max(np.abs(p_pred_n - p_exact_n))
+    u_e_min = np.min(u_pred_n - u_exact_n)
+    v_e_min = np.min(v_pred_n - v_exact_n)
+    p_e_min = np.min(p_pred_n - p_exact_n)
 
-    e_max = max(e_max, u_e_max, v_e_max, p_e_max)
+    u_e_max = np.max(u_pred_n - u_exact_n)
+    v_e_max = np.max(v_pred_n - v_exact_n)
+    p_e_max = np.max(p_pred_n - p_exact_n)
+
+    e_min[0] = min(e_min[0], u_e_min)
+    e_min[1] = min(e_min[1], v_e_min)
+    e_min[2] = min(e_min[2], p_e_min)
+
+    e_max[0] = max(e_max[0], u_e_max)
+    e_max[1] = max(e_max[1], v_e_max)
+    e_max[2] = max(e_max[2], p_e_max)
 
 levels_u = np.linspace(u_min, u_max, N_LEVELS)
 levels_v = np.linspace(v_min, v_max, N_LEVELS)
 levels_p = np.linspace(p_min, p_max, N_LEVELS)
 
-e_levels = np.linspace(-e_max, e_max, N_LEVELS)
+u_e_min = e_min[0]
+v_e_min = e_min[1]
+p_e_min = e_min[2]
 
-e_norm = TwoSlopeNorm(
-    vmin=-e_max,
+u_e_max = e_max[0]
+v_e_max = e_max[1]
+p_e_max = e_max[2]
+
+u_e_levels = np.linspace(u_e_min, u_e_max, N_LEVELS)
+v_e_levels = np.linspace(v_e_min, v_e_max, N_LEVELS)
+p_e_levels = np.linspace(p_e_min, p_e_max, N_LEVELS)
+
+u_e_norm = TwoSlopeNorm(
+    vmin=u_e_min,
     vcenter=0.0,
-    vmax=e_max
+    vmax=u_e_max
 )
+
+v_e_norm = TwoSlopeNorm(
+    vmin=v_e_min,
+    vcenter=0.0,
+    vmax=v_e_max
+)
+
+p_e_norm = TwoSlopeNorm(
+    vmin=p_e_min,
+    vcenter=0.0,
+    vmax=p_e_max
+)
+
+level = {
+    "u": u_e_levels,
+    "v": v_e_levels,
+    "p": p_e_levels
+}
+
+norm = {
+    "u": u_e_norm,
+    "v": v_e_norm,
+    "p": p_e_norm
+}
 
 #%%
 
@@ -119,16 +169,16 @@ def plot_npz_file(file):
             constrained_layout=True
         )
 
-        fig.suptitle(f"{file}")
+        fig.suptitle(f"{plot_name[file]}")
 
         cf1 = axes[0].contourf(Xn, Yn, exact, levels=levels)
-        axes[0].set_title(f"Exact solution {name}")
+        axes[0].set_title(f"Eksakt løsning {name}")
         axes[0].set_xlabel("x")
         axes[0].set_ylabel("y")
         fig.colorbar(cf1, ax=axes[0])
 
         cf2 = axes[1].contourf(Xn, Yn, pred, levels=levels)
-        axes[1].set_title(f"PINN prediction {name}")
+        axes[1].set_title(f"Gennemsnitlig prædiktion {name}")
         axes[1].set_xlabel("x")
         axes[1].set_ylabel("y")
         fig.colorbar(cf2, ax=axes[1])
@@ -139,11 +189,11 @@ def plot_npz_file(file):
             Xn,
             Yn,
             error,
-            levels=e_levels,
-            norm=e_norm,
+            levels=level[name],
+            norm=norm[name],
             cmap="coolwarm"
         )
-        axes[2].set_title(f"Error {name}: prediction - exact")
+        axes[2].set_title(f"Fejl {name}: prædiktion - eksakt")
         axes[2].set_xlabel("x")
         axes[2].set_ylabel("y")
         fig.colorbar(cf3, ax=axes[2])
@@ -189,28 +239,28 @@ for comp_name, key_lmax, key_l2 in components:
     ax[0].plot(
         seeds,
         baseline_data[key_lmax],
-        label=f"Baseline: {baseline_file}",
+        label=f"{plot_name[baseline_file]}",
         linewidth=2.5,
         color=color
     )
     ax[0].axhline(
         np.mean(baseline_data[key_lmax]),
         linestyle="--",
-        label="Mean baseline",
+        label=f"Gennemsnit {plot_name[baseline_file]}",
         color=color
     )
 
     ax[1].plot(
         seeds,
         baseline_data[key_l2],
-        label=f"Baseline: {baseline_file}",
+        label=f"{plot_name[baseline_file]}",
         linewidth=2.5,
         color=color
     )
     ax[1].axhline(
         np.mean(baseline_data[key_l2]),
         linestyle="--",
-        label="Mean baseline",
+        label=f"Gennemsnit {plot_name[baseline_file]}",
         color=color
     )
 
@@ -221,37 +271,37 @@ for comp_name, key_lmax, key_l2 in components:
         ax[0].plot(
             seeds,
             data[key_lmax],
-            label=file,
+            label=f"{plot_name[file]}",
             color=color
         )
         ax[0].axhline(
             np.mean(data[key_lmax]),
             linestyle="--",
-            label=f"Mean {file}",
+            label=f"Gennemsnit {plot_name[file]}",
             color=color
         )
 
         ax[1].plot(
             seeds,
             data[key_l2],
-            label=file,
+            label=f"{plot_name[file]}",
             color=color
         )
         ax[1].axhline(
             np.mean(data[key_l2]),
             linestyle="--",
-            label=f"Mean {file}",
+            label=f"Gennemsnit {file}",
             color=color
         )
 
     ax[0].set_xlabel("Seed")
-    ax[0].set_ylabel(r"$L_\infty$ error")
-    ax[0].set_title(fr"{comp_name}: $L_\infty$ vs seed")
+    ax[0].set_ylabel(r"$L_\infty$ fejl")
+    ax[0].set_title(fr"{comp_name}: $L_\infty$ vs 'seed'")
     ax[0].grid(True)
 
     ax[1].set_xlabel("Seed")
-    ax[1].set_ylabel(r"$L_2$ error")
-    ax[1].set_title(fr"{comp_name}: $L_2$ vs seed")
+    ax[1].set_ylabel(r"$L_2$ fejl")
+    ax[1].set_title(fr"{comp_name}: $L_2$ vs 'seed'")
     ax[1].grid(True)
 
     # Shared legend under both subplots
@@ -295,30 +345,30 @@ for comp_name, key_l2, key_lmax in val_components:
     ax[0].semilogy(
         epochs,
         baseline_data[key_lmax],
-        label=f"Baseline: {baseline_file}",
+        label=f"{plot_name[baseline_file]}",
         linewidth=2.5
     )
     ax[1].semilogy(
         epochs,
         baseline_data[key_l2],
-        label=f"Baseline: {baseline_file}",
+        label=f"{plot_name[baseline_file]}",
         linewidth=2.5
     )
 
     # Other files
     for file, data in zip(files, datasets):
-        ax[0].semilogy(epochs, data[key_lmax], label=file)
-        ax[1].semilogy(epochs, data[key_l2], label=file)
+        ax[0].semilogy(epochs, data[key_lmax], label=plot_name[file])
+        ax[1].semilogy(epochs, data[key_l2], label=plot_name[file])
 
     ax[0].set_xlabel("Epoch")
-    ax[0].set_ylabel(r"$L_\infty$ validation error")
-    ax[0].set_title(fr"{comp_name}: validation $L_\infty$")
+    ax[0].set_ylabel(r"$L_\infty$-valideringsfejl")
+    ax[0].set_title(fr"{comp_name}: validering $L_\infty$")
     ax[0].grid(True, which="both")
     ax[0].legend()
 
     ax[1].set_xlabel("Epoch")
-    ax[1].set_ylabel(r"$L_2$ validation error")
-    ax[1].set_title(fr"{comp_name}: validation $L_2$")
+    ax[1].set_ylabel(r"$L_2$-valideringsfejl")
+    ax[1].set_title(fr"{comp_name}: validering $L_2$")
     ax[1].grid(True, which="both")
     ax[1].legend()
 
@@ -351,13 +401,13 @@ for i, (label, data) in enumerate(zip(model_labels, model_data)):
         x + (i - 1) * width,
         mean_lmax,
         width,
-        label=label,
+        label=plot_name[label],
         color=model_colors[model_files[i]]
     )
 
 ax.set_xlabel("Variable")
-ax.set_ylabel(r"Mean $L_\infty$ error")
-ax.set_title(r"Mean final $L_\infty$ error")
+ax.set_ylabel(r"Gennemsnitlig $L_\infty$-fejl")
+ax.set_title(r"Gennemsnitlige $L_\infty$-fejl")
 ax.set_xticks(x)
 ax.set_xticklabels(components)
 ax.grid(True, axis="y")
@@ -380,13 +430,13 @@ for i, (label, data) in enumerate(zip(model_labels, model_data)):
         x + (i - 1) * width,
         mean_l2,
         width,
-        label=label,
+        label=plot_name[label],
         color=model_colors[model_files[i]]
     )
 
-ax.set_xlabel("Variable")
-ax.set_ylabel(r"Mean $L_2$ error")
-ax.set_title(r"Mean final $L_2$ error")
+ax.set_xlabel("Variabel")
+ax.set_ylabel(r"Gennemsnitlig $L_2$-fejl")
+ax.set_title(r"Gennemsnitlige $L_2$-fejl")
 ax.set_xticks(x)
 ax.set_xticklabels(components)
 ax.grid(True, axis="y")
@@ -403,7 +453,7 @@ plt.show()
 
 print("\nSummary of mean final errors")
 print("-" * 70)
-print(f"{'File':<28} {'Component':<10} {'Mean L_inf':<15} {'Mean L2':<15}")
+print(f"{'Model':<20} {'Komponent':<10} {'L_inf':<15} {'L2':<15}")
 print("-" * 70)
 
 for file, data in [(baseline_file, baseline_data)] + list(zip(files, datasets)):
@@ -412,7 +462,7 @@ for file, data in [(baseline_file, baseline_data)] + list(zip(files, datasets)):
         mean_l2 = np.mean(data[f"{comp_name}_L_2"])
 
         print(
-            f"{file:<28} "
+            f"{plot_name[file]:<20} "
             f"{comp_name:<10} "
             f"{mean_lmax:<15.4e} "
             f"{mean_l2:<15.4e}"
@@ -464,7 +514,7 @@ for file in moe_files:
         )
 
         axes[k].set_title(
-            f"{file}\nMean weight for expert {k + 1}"
+            f"{plot_name[file]}\nGennemsnits vægte ekspert {k + 1}"
         )
         axes[k].set_xlabel(r"$x$")
         axes[k].set_ylabel(r"$y$")
