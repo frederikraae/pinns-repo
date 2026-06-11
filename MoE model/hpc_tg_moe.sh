@@ -2,9 +2,10 @@
 #BSUB -J tg_moe_hpc_50
 #BSUB -q hpc
 #BSUB -n 16
-#BSUB -W 09:00
+#BSUB -W 18:00
 #BSUB -R "span[hosts=1]"
-#BSUB -R "rusage[mem=1500MB]"
+#BSUB -R "rusage[mem=1GB]"
+#BSUB -B
 #BSUB -N
 #BSUB -o logs/tg_hpc_%J.out
 #BSUB -e logs/tg_hpc_%J.err

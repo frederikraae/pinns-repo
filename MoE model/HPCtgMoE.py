@@ -23,6 +23,8 @@ p_analytical = lambda x, y, t: (-rho / 4) * V0**2 * (cos(2*x / L) + cos(2*y / L)
 
 
 def run_seed(seed):
+    
+    print(f'Seed {seed} is running')
      # Avoid each process using too many CPU threads
     torch.set_num_threads(1)
 
@@ -507,7 +509,7 @@ if __name__ == "__main__":
 
         gate_weights_n += result["gate_weights"] / n
 
-    filename = "MoETaylorGreen_50seeds.npz"
+    filename = f"MoETaylorGreen_{NUMBER_OF_SEEDS}seeds.npz"
 
     np.savez(
         filename,

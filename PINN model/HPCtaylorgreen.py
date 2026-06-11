@@ -24,6 +24,8 @@ p_analytical = lambda x, y, t: (-rho / 4) * V0**2 * (cos(2*x / L) + cos(2*y / L)
 
 
 def run_seed(seed):
+
+    print(f'Seed {seed} is running')
      # Avoid each process using too many CPU threads
     torch.set_num_threads(1)
 
@@ -512,7 +514,7 @@ if __name__ == "__main__":
         val_p_l2 += np.array(result["val_p_l2"]) / n
         val_p_lmax += np.array(result["val_p_lmax"]) / n
 
-    filename = "pinnTaylorGreen_softa_50seeds.npz" if w_softa else "pinnTaylorGreen_50seeds.npz"
+    filename = f"pinnTaylorGreen_softa_{NUMBER_OF_SEEDS}seeds.npz" if w_softa else f"pinnTaylorGreen_{NUMBER_OF_SEEDS}seeds.npz"
 
     np.savez(
         filename,
