@@ -23,7 +23,8 @@ v_analytical = lambda x, y, t: -V0 * sin(x / L) * cos(y / L) * exp(-2 * (nu / L*
 p_analytical = lambda x, y, t: (-rho / 4) * V0**2 * (cos(2*x / L) + cos(2*y / L)) * exp(-4 * (nu / L**2) * t)
 
 
-def run_seed(seed):
+def run_seed(args):
+    seed, w_softa = args
 
     print(f'Seed {seed} is running')
      # Avoid each process using too many CPU threads
@@ -432,7 +433,11 @@ if __name__ == "__main__":
     start = perf_counter()
 
     with mp.Pool(n_procs) as pool:
-        results = pool.map(run_seed, seeds, chunksize=1)
+        results = pool.map(
+            run_seed,
+            [(seed, w_softa) for seed in seeds],
+            chunksize=1
+        )
     elapsed = perf_counter() - start
 
     n = len(results)
