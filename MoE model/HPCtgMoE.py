@@ -84,10 +84,10 @@ def run_seed(seed):
     lam_balance = 0.05
 
     # Interior points (collacation)
-    N = 1000
+    N = 50
 
     # Training loop
-    n_epoch = 15_000
+    n_epoch = 10_000
 
     for epoch in range(n_epoch):
         optimizer.zero_grad()
@@ -509,7 +509,7 @@ if __name__ == "__main__":
 
         gate_weights_n += result["gate_weights"] / n
 
-    filename = f"MoETaylorGreen_{NUMBER_OF_SEEDS}seeds.npz"
+    filename = f"MoETaylorGreen_c{NUMBER_OF_SEEDS}seeds.npz"
 
     np.savez(
         filename,

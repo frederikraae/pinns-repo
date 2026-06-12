@@ -1,12 +1,10 @@
 #!/bin/bash
-#BSUB -J tg_moe_hpc_50
+#BSUB -J tg_moe_hpc_50c
 #BSUB -q hpc
 #BSUB -n 16
-#BSUB -W 18:00
+#BSUB -W 02:40
 #BSUB -R "span[hosts=1]"
-#BSUB -R "rusage[mem=1500MB]"
-#BSUB -B
-#BSUB -N
+#BSUB -R "rusage[mem=500MB]"
 #BSUB -o logs/tg_hpc_%J.out
 #BSUB -e logs/tg_hpc_%J.err
 

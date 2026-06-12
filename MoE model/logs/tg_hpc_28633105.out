@@ -1,0 +1,114 @@
+No GPU on this node, CUDA module not loaded
+--- Running 50 seeds with 16 processes ---
+Seed 0 is running
+Seed 1 is running
+Seed 2 is running
+Seed 3 is running
+Seed 4 is running
+Seed 5 is running
+Seed 6 is running
+Seed 7 is running
+Seed 8 is running
+Seed 9 is running
+Seed 10 is running
+Seed 11 is running
+Seed 12 is running
+Seed 13 is running
+Seed 14 is running
+Seed 15 is running
+Seed 16 is running
+Seed 17 is running
+Seed 18 is running
+Seed 19 is running
+Seed 20 is running
+Seed 21 is running
+Seed 22 is running
+Seed 23 is running
+Seed 24 is running
+Seed 25 is running
+Seed 26 is running
+Seed 27 is running
+Seed 28 is running
+Seed 29 is running
+Seed 30 is running
+Seed 31 is running
+Seed 32 is running
+Seed 33 is running
+Seed 34 is running
+Seed 35 is running
+Seed 36 is running
+Seed 37 is running
+Seed 38 is running
+Seed 39 is running
+Seed 40 is running
+Seed 41 is running
+Seed 42 is running
+Seed 43 is running
+Seed 44 is running
+Seed 45 is running
+Seed 46 is running
+Seed 47 is running
+Seed 48 is running
+Seed 49 is running
+
+N = 50 seeds
+Elapsed: 5074.77 s
+Per seed: 101.50 s
+Saved .npz
+
+------------------------------------------------------------
+Sender: LSF System <lsfadmin@hpc.dtu.dk>
+Subject: Job 28633105: <tg_moe_hpc_50c> in cluster <dcc> Done
+
+Job <tg_moe_hpc_50c> was submitted from host <n-62-27-17> by user <s213935> in cluster <dcc> at Fri Jun 12 10:02:58 2026
+Job was executed on host(s) <16*n-62-29-9>, in queue <hpc>, as user <s213935> in cluster <dcc> at Fri Jun 12 10:03:00 2026
+</zhome/15/6/166811> was used as the home directory.
+</zhome/15/6/166811/Documents/pinns-repo/MoE model> was used as the working directory.
+Started at Fri Jun 12 10:03:00 2026
+Terminated at Fri Jun 12 11:27:49 2026
+Results reported at Fri Jun 12 11:27:49 2026
+
+Your job looked like:
+
+------------------------------------------------------------
+# LSBATCH: User input
+#!/bin/bash
+#BSUB -J tg_moe_hpc_50c
+#BSUB -q hpc
+#BSUB -n 16
+#BSUB -W 02:40
+#BSUB -R "span[hosts=1]"
+#BSUB -R "rusage[mem=500MB]"
+#BSUB -o logs/tg_hpc_%J.out
+#BSUB -e logs/tg_hpc_%J.err
+
+
+source /dtu/projects/02613_2025/conda/conda_init.sh
+conda activate PINN
+
+python -u HPCtgMoE.py 16 50
+------------------------------------------------------------
+
+Successfully completed.
+
+Resource usage summary:
+
+    CPU time :                                   65864.41 sec.
+    Max Memory :                                 3314 MB
+    Average Memory :                             3090.16 MB
+    Total Requested Memory :                     8000.00 MB
+    Delta Memory :                               4686.00 MB
+    Max Swap :                                   -
+    Max Processes :                              20
+    Max Threads :                                24
+    Run time :                                   5089 sec.
+    Turnaround time :                            5091 sec.
+
+The output (if any) is above this job summary.
+
+
+
+PS:
+
+Read file <logs/tg_hpc_28633105.err> for stderr output of this job.
+

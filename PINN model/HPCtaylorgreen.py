@@ -88,10 +88,10 @@ def run_seed(args):
     lam_ic = 5.0
 
     # Interior points (collacation)
-    N = 1000
+    N = 50
 
     # Training loop
-    n_epoch = 15_000
+    n_epoch = 10_000
 
     for epoch in range(n_epoch):
         optimizer.zero_grad()
@@ -519,7 +519,7 @@ if __name__ == "__main__":
         val_p_l2 += np.array(result["val_p_l2"]) / n
         val_p_lmax += np.array(result["val_p_lmax"]) / n
 
-    filename = f"pinnTaylorGreen_softa_{NUMBER_OF_SEEDS}seeds.npz" if w_softa else f"pinnTaylorGreen_{NUMBER_OF_SEEDS}seeds.npz"
+    filename = f"pinnTaylorGreen_softa_c{NUMBER_OF_SEEDS}seeds.npz" if w_softa else f"pinnTaylorGreen_c{NUMBER_OF_SEEDS}seeds.npz"
 
     np.savez(
         filename,
