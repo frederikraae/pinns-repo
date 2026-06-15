@@ -16,24 +16,24 @@ plt.rcParams.update({
 })
 
 # Baseline file
-baseline_file = "pinnTaylorGreen_16seeds.npz"
+baseline_file = "pinnTaylorGreen_50seeds.npz"
 
 # Files to compare against baseline
 files = [
-    "MoETaylorGreen_16seeds.npz",
-    "pinnTaylorGreen_softa_16seeds.npz"
+    "MoETaylorGreen_50seeds.npz",
+    "pinnTaylorGreen_softa_50seeds.npz"
 ]
 
 model_colors = {
     baseline_file: "tab:blue",
-    "MoETaylorGreen_16seeds.npz": "tab:orange",
-    "pinnTaylorGreen_softa_16seeds.npz": "tab:green",
+    "MoETaylorGreen_50seeds.npz": "tab:orange",
+    "pinnTaylorGreen_softa_50seeds.npz": "tab:green",
 }
 
 plot_name = {
-    baseline_file: "PINN",
-    "MoETaylorGreen_16seeds.npz": "MoE-PINN",
-    "pinnTaylorGreen_softa_16seeds.npz": "PINN med SoftAdapt",
+    baseline_file: "Naiv PINN",
+    "MoETaylorGreen_50seeds.npz": "MoE-PINN",
+    "pinnTaylorGreen_softa_50seeds.npz": "PINN med SoftAdapt",
 }
 
 N_LEVELS = 15
@@ -172,13 +172,13 @@ def plot_npz_file(file):
         fig.suptitle(f"{plot_name[file]}")
 
         cf1 = axes[0].contourf(Xn, Yn, exact, levels=levels)
-        axes[0].set_title(f"Eksakt løsning {name}")
+        axes[0].set_title(f"Eksakt løsning ${name}$")
         axes[0].set_xlabel("x")
         axes[0].set_ylabel("y")
         fig.colorbar(cf1, ax=axes[0])
 
         cf2 = axes[1].contourf(Xn, Yn, pred, levels=levels)
-        axes[1].set_title(f"Gennemsnitlig prædiktion {name}")
+        axes[1].set_title(f"Gennemsnitlig prædiktion $\hat{{{name}}}$")
         axes[1].set_xlabel("x")
         axes[1].set_ylabel("y")
         fig.colorbar(cf2, ax=axes[1])
@@ -193,7 +193,7 @@ def plot_npz_file(file):
             norm=norm[name],
             cmap="coolwarm"
         )
-        axes[2].set_title(f"Fejl {name}: prædiktion - eksakt")
+        axes[2].set_title(rf"Fejl: $\hat{{{name}}} - {{{name}}}$")
         axes[2].set_xlabel("x")
         axes[2].set_ylabel("y")
         fig.colorbar(cf3, ax=axes[2])
@@ -230,7 +230,7 @@ for comp_name, key_lmax, key_l2 in components:
     fig, ax = plt.subplots(
         1,
         2,
-        figsize=(12, 4)
+        figsize=(12, 5)
     )
 
     # Baseline
@@ -296,12 +296,12 @@ for comp_name, key_lmax, key_l2 in components:
 
     ax[0].set_xlabel("Seed")
     ax[0].set_ylabel(r"$L_\infty$ fejl")
-    ax[0].set_title(fr"{comp_name}: $L_\infty$ vs 'seed'")
+    ax[0].set_title(fr"${{{comp_name}}}$: $L_\infty$ vs 'seed'")
     ax[0].grid(True)
 
     ax[1].set_xlabel("Seed")
     ax[1].set_ylabel(r"$L_2$ fejl")
-    ax[1].set_title(fr"{comp_name}: $L_2$ vs 'seed'")
+    ax[1].set_title(fr"${{{comp_name}}}$: $L_2$ vs 'seed'")
     ax[1].grid(True)
 
     # Shared legend under both subplots
@@ -362,13 +362,13 @@ for comp_name, key_l2, key_lmax in val_components:
 
     ax[0].set_xlabel("Epoch")
     ax[0].set_ylabel(r"$L_\infty$-valideringsfejl")
-    ax[0].set_title(fr"{comp_name}: validering $L_\infty$")
+    ax[0].set_title(fr"${{{comp_name}}}$: validering $L_\infty$")
     ax[0].grid(True, which="both")
     ax[0].legend()
 
     ax[1].set_xlabel("Epoch")
     ax[1].set_ylabel(r"$L_2$-valideringsfejl")
-    ax[1].set_title(fr"{comp_name}: validering $L_2$")
+    ax[1].set_title(fr"${{{comp_name}}}$: validering $L_2$")
     ax[1].grid(True, which="both")
     ax[1].legend()
 
@@ -451,21 +451,26 @@ plt.show()
 # Print summary table
 # ------------------------------------------------------------
 
-print("\nSummary of mean final errors")
+print("\nSummary of final errors")
 print("-" * 70)
-print(f"{'Model':<20} {'Komponent':<10} {'L_inf':<15} {'L2':<15}")
+print(f"{'Model':<20} {'Komponent':<10} {'L_inf':<20} {'L2':<20}")
+print(f"{' ':<31} {'Mean':<10}{'Std':<10} {'Mean':<10}{'Std':<10}" )
 print("-" * 70)
 
 for file, data in [(baseline_file, baseline_data)] + list(zip(files, datasets)):
     for comp_name in ["u", "v", "p"]:
         mean_lmax = np.mean(data[f"{comp_name}_L_max"])
+        std_lmax = np.std(data[f"{comp_name}_L_max"])
         mean_l2 = np.mean(data[f"{comp_name}_L_2"])
+        std_l2 = np.std(data[f"{comp_name}_L_2"])
 
         print(
             f"{plot_name[file]:<20} "
             f"{comp_name:<10} "
-            f"{mean_lmax:<15.4e} "
-            f"{mean_l2:<15.4e}"
+            f"{mean_lmax:<10.2e}"
+            f"{std_lmax:<10.2e} "
+            f"{mean_l2:<10.2e}"
+            f"{std_l2:<10.2e}"
         )
 
 print("-" * 70)
@@ -477,7 +482,7 @@ print("-" * 70)
 # ------------------------------------------------------------
 
 moe_files = [
-    "MoETaylorGreen_16seeds.npz",
+    "MoETaylorGreen_50seeds.npz",
 ]
 
 for file in moe_files:
