@@ -1,5 +1,5 @@
 #!/bin/bash
-#BSUB -J tg_moe_hpc_50c
+#BSUB -J tg_pinn
 #BSUB -q hpc
 #BSUB -n 16
 #BSUB -W 02:40
@@ -12,4 +12,4 @@
 source /dtu/projects/02613_2025/conda/conda_init.sh
 conda activate PINN
 
-python -u HPCtgMoE.py 16 50
+python -u hpc_tg_pinn.py 16 50 50 false

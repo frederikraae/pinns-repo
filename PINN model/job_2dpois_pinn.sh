@@ -1,5 +1,5 @@
 #!/bin/bash
-#BSUB -J pinn_hpc
+#BSUB -J 2dpois_pinn
 #BSUB -q hpc
 #BSUB -n 8
 #BSUB -W 01:00
@@ -13,4 +13,4 @@
 source /dtu/projects/02613_2025/conda/conda_init.sh
 conda activate PINN
 
-python -u HPCpoisson2d.py 8 16 false
+python -u hpc_2dpois_pinn.py 8 50 false

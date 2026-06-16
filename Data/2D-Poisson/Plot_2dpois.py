@@ -16,24 +16,24 @@ plt.rcParams.update({
 })
 
 # Baseline file
-baseline_file = "pinn2dpos_expanded.npz"
+baseline_file = "2dpois_pinn.npz"
 
 # Files to compare against baseline
 files = [
-    "moe2dpos_expanded.npz",
-    "pinn2dpos_expa_softa.npz",
+    "2dpois_moe.npz",
+    "2dpois_pinn_soft.npz",
 ]
 
 model_colors = {
     baseline_file: "tab:blue",
-    "moe2dpos_expanded.npz": "tab:orange",
-    "pinn2dpos_expa_softa.npz": "tab:green",
+    "2dpois_moe.npz": "tab:orange",
+    "2dpois_pinn_soft.npz": "tab:green",
 }
 
 plot_name = {
     baseline_file: "Naiv PINN",
-    "moe2dpos_expanded.npz": "MoE-PINN",
-    "pinn2dpos_expa_softa.npz": "PINN med SoftAdapt",
+    "2dpois_moe.npz": "MoE-PINN",
+    "2dpois_pinn_soft.npz": "PINN med SoftAdapt",
 }
 
 N_LEVELS = 30
@@ -414,7 +414,7 @@ print("-" * 70)
 # ------------------------------------------------------------
 
 moe_files = [
-    "moe2dpos_expanded.npz"
+    "2dpois_moe.npz"
 ]
 
 for file in moe_files:

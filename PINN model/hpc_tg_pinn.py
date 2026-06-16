@@ -6,7 +6,7 @@ from torch import sin, cos, exp, pi
 import multiprocessing as mp
 from time import perf_counter
 
-from network import PINN
+from models import PINN
 from softadapt import LossWeightedSoftAdapt
 
 # Parameters
@@ -24,7 +24,7 @@ p_analytical = lambda x, y, t: (-rho / 4) * V0**2 * (cos(2*x / L) + cos(2*y / L)
 
 
 def run_seed(args):
-    seed, w_softa = args
+    seed, w_softa, collac = args
 
     print(f'Seed {seed} is running')
      # Avoid each process using too many CPU threads
@@ -88,7 +88,7 @@ def run_seed(args):
     lam_ic = 5.0
 
     # Interior points (collacation)
-    N = 50
+    N = collac
 
     # Training loop
     n_epoch = 10_000
@@ -428,14 +428,16 @@ if __name__ == "__main__":
 
     print(f"--- Running {NUMBER_OF_SEEDS} seeds with {n_procs} processes ---")
 
-    w_softa = sys.argv[3].lower() in ["true", "1", "yes", "y"] if len(sys.argv) > 3 else False
+    collac = int(sys.argv[3]) if len(sys.argv) > 3 else 50
+
+    w_softa = sys.argv[4].lower() in ["true", "1", "yes", "y"] if len(sys.argv) > 4 else False
 
     start = perf_counter()
 
     with mp.Pool(n_procs) as pool:
         results = pool.map(
             run_seed,
-            [(seed, w_softa) for seed in seeds],
+            [(seed, w_softa, collac) for seed in seeds],
             chunksize=1
         )
     elapsed = perf_counter() - start
@@ -519,7 +521,7 @@ if __name__ == "__main__":
         val_p_l2 += np.array(result["val_p_l2"]) / n
         val_p_lmax += np.array(result["val_p_lmax"]) / n
 
-    filename = f"pinnTaylorGreen_softa_c{NUMBER_OF_SEEDS}seeds.npz" if w_softa else f"pinnTaylorGreen_c{NUMBER_OF_SEEDS}seeds.npz"
+    filename = f"tg_pinn_soft_{collac}.npz" if w_softa else f"tg_pinn_{collac}.npz"
 
     np.savez(
         filename,

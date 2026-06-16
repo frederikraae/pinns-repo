@@ -6,7 +6,7 @@ from torch import sin, cos, exp, pi
 import multiprocessing as mp
 from time import perf_counter
 
-from new_model import MoEPINN
+from models import MoEPINN
 
 # Parameters
 V0 = 1.0
@@ -22,7 +22,8 @@ v_analytical = lambda x, y, t: -V0 * sin(x / L) * cos(y / L) * exp(-2 * (nu / L*
 p_analytical = lambda x, y, t: (-rho / 4) * V0**2 * (cos(2*x / L) + cos(2*y / L)) * exp(-4 * (nu / L**2) * t)
 
 
-def run_seed(seed):
+def run_seed(args):
+    seed, collac = args
     
     print(f'Seed {seed} is running')
      # Avoid each process using too many CPU threads
@@ -84,7 +85,7 @@ def run_seed(seed):
     lam_balance = 0.05
 
     # Interior points (collacation)
-    N = 50
+    N = collac
 
     # Training loop
     n_epoch = 10_000
@@ -420,10 +421,16 @@ if __name__ == "__main__":
 
     print(f"--- Running {NUMBER_OF_SEEDS} seeds with {n_procs} processes ---")
 
+    collac = int(sys.argv[3]) if len(sys.argv) > 3 else 50
+
     start = perf_counter()
 
     with mp.Pool(n_procs) as pool:
-        results = pool.map(run_seed, seeds, chunksize=1)
+        results = pool.map(
+            run_seed,
+            [(seed, collac) for seed in seeds],
+            chunksize=1
+        )
     elapsed = perf_counter() - start
 
     n = len(results)
@@ -509,7 +516,7 @@ if __name__ == "__main__":
 
         gate_weights_n += result["gate_weights"] / n
 
-    filename = f"MoETaylorGreen_c{NUMBER_OF_SEEDS}seeds.npz"
+    filename = f"tg_moe_{collac}.npz"
 
     np.savez(
         filename,

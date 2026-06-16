@@ -5,8 +5,7 @@ import torch
 import multiprocessing as mp
 from time import perf_counter
 
-from new_model import MoEPINN, Expert
-from softadapt import LossWeightedSoftAdapt
+from models import MoEPINN
 
 def run_seed(seed):
     # Avoid each process using too many CPU threads
@@ -68,12 +67,6 @@ def run_seed(seed):
 
     optimizer = torch.optim.Adam(moe.parameters(), lr=1e-3)
 
-    if w_softa:
-        softadapt_object = LossWeightedSoftAdapt(beta=0.1, accuracy_order=5)
-        window = 25
-        loss_hist_1 = []
-        loss_hist_2 = []
-
     lam_pde = 1.0
     lam_bc = 10.0
     lam_bal = 0.05
@@ -127,18 +120,6 @@ def run_seed(seed):
         mean_gate = torch.mean(gate_weights.squeeze(1), dim=0)
         K = moe.num_experts
         loss_balance = K * torch.sum(mean_gate ** 2)
-
-        if w_softa:
-
-            loss_hist_1.append(loss_pde.item())
-            loss_hist_2.append(loss_bc.item())
-
-            if epoch >= window and epoch % window == 0:
-                weights = softadapt_object.get_component_weights(
-                    torch.tensor(loss_hist_1[-window:], dtype=torch.float32),
-                    torch.tensor(loss_hist_2[-window:], dtype=torch.float32)
-                )
-                lam_pde, lam_bc = [w.item() for w in weights]
 
         loss = lam_pde * loss_pde + lam_bc * loss_bc + lam_bal * loss_balance
 
@@ -209,10 +190,6 @@ if __name__ == "__main__":
 
     print(f"--- Running {NUMBER_OF_SEEDS} seeds with {n_procs} processes ---")
 
-    w_softa = sys.argv[3].lower() in ["true", "1", "yes", "y"] if len(sys.argv) > 3 else False
-
-    print(f'With SoftAdapt: {w_softa}')
-
     start = perf_counter()
 
     with mp.Pool(n_procs) as pool:
@@ -245,34 +222,20 @@ if __name__ == "__main__":
         val_lmax += result["val_lmax"] / n
         gate_weights_n += result["gate_weights"] / n
 
-    if w_softa:
-        np.savez(
-            f"moe2dpos_expa_softa_{NUMBER_OF_SEEDS}seeds.npz",
-            Xn=Xn,
-            Yn=Yn,
-            u_pred_n=u_pred_n,
-            u_exact_n=u_exact_n,
-            error_n=error_n,
-            L_max=L_max,
-            L_2=L_2,
-            gate_weights_n = gate_weights_n,
-            val_l2=val_l2,
-            val_lmax=val_lmax
-        )
-    else:
-        np.savez(
-            f"moe2dpos_expanded_{NUMBER_OF_SEEDS}seeds.npz",
-            Xn=Xn,
-            Yn=Yn,
-            u_pred_n=u_pred_n,
-            u_exact_n=u_exact_n,
-            error_n=error_n,
-            L_max=L_max,
-            L_2=L_2,
-            gate_weights_n = gate_weights_n,
-            val_l2=val_l2,
-            val_lmax=val_lmax
-        )
+    
+    np.savez(
+        f"2dpois_moe.npz",
+        Xn=Xn,
+        Yn=Yn,
+        u_pred_n=u_pred_n,
+        u_exact_n=u_exact_n,
+        error_n=error_n,
+        L_max=L_max,
+        L_2=L_2,
+        gate_weights_n = gate_weights_n,
+        val_l2=val_l2,
+        val_lmax=val_lmax
+    )
 
     sec_per_seed = elapsed / NUMBER_OF_SEEDS
 

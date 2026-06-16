@@ -5,7 +5,7 @@ import torch
 import multiprocessing as mp
 from time import perf_counter
 
-from network import PINN
+from models import PINN
 from softadapt import LossWeightedSoftAdapt
 
 def run_seed(seed):
@@ -233,7 +233,7 @@ if __name__ == "__main__":
 
     if w_softa:
         np.savez(
-            f"pinn2dpos_expa_softa_{NUMBER_OF_SEEDS}seeds.npz",
+            f"2dpois_pinn_soft.npz",
             Xn=Xn,
             Yn=Yn,
             u_pred_n=u_pred_n,
@@ -246,7 +246,7 @@ if __name__ == "__main__":
         )
     else:
         np.savez(
-            f"pinn2dpos_expanded_{NUMBER_OF_SEEDS}seeds.npz",
+            f"2dpois_pinn.npz",
             Xn=Xn,
             Yn=Yn,
             u_pred_n=u_pred_n,

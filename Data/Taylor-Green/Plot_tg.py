@@ -16,24 +16,24 @@ plt.rcParams.update({
 })
 
 # Baseline file
-baseline_file = "pinnTaylorGreen_50seeds.npz"
+baseline_file = "tg_pinn_50.npz"
 
 # Files to compare against baseline
 files = [
-    "MoETaylorGreen_50seeds.npz",
-    "pinnTaylorGreen_softa_50seeds.npz"
+    "tg_moe_50.npz",
+    "tg_pinn_soft_50.npz"
 ]
 
 model_colors = {
     baseline_file: "tab:blue",
-    "MoETaylorGreen_50seeds.npz": "tab:orange",
-    "pinnTaylorGreen_softa_50seeds.npz": "tab:green",
+    "tg_moe_50.npz": "tab:orange",
+    "tg_pinn_soft_50.npz": "tab:green",
 }
 
 plot_name = {
     baseline_file: "Naiv PINN",
-    "MoETaylorGreen_50seeds.npz": "MoE-PINN",
-    "pinnTaylorGreen_softa_50seeds.npz": "PINN med SoftAdapt",
+    "tg_moe_50.npz": "MoE-PINN",
+    "tg_pinn_soft_50.npz": "PINN med SoftAdapt",
 }
 
 N_LEVELS = 15
@@ -482,7 +482,7 @@ print("-" * 70)
 # ------------------------------------------------------------
 
 moe_files = [
-    "MoETaylorGreen_50seeds.npz",
+    "tg_moe_50.npz",
 ]
 
 for file in moe_files:
