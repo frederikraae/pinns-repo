@@ -88,7 +88,7 @@ def run_seed(args):
     N = collac
 
     # Training loop
-    n_epoch = 10_000
+    n_epoch = 15_000
 
     for epoch in range(n_epoch):
         optimizer.zero_grad()
