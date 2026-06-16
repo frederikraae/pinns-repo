@@ -60,7 +60,7 @@ The implemented models are:
 The benchmark problems are:
 
 * the two-dimensional Poisson equation,
-* the Taylor-Green vortex problem.
+* the Taylor-Green vortex problem (Navier-Stokes).
 
 The repository provides the implementation, saved numerical data, and plotting scripts used to produce the figures and computational results discussed in the accompanying report.
 
