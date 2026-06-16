@@ -18,6 +18,8 @@ The repository is intended as supplementary material. The mathematical derivatio
 │   └── Taylor-Green/
 │       ├── tg_pinn_50.npz
 │       ├── tg_pinn_1000.npz
+│       ├── tg_pinn_soft_50.npz
+│       ├── tg_pinn_soft_1000.npz
 │       ├── tg_moe_50.npz
 │       ├── tg_moe_1000.npz
 │       └── plot_tg.py
@@ -375,17 +377,16 @@ The generated figures are stored in the `Plots/` directory and are used in the a
 
 ## Reproducibility
 
-The experiments are repeated over multiple random seeds. The saved `.npz` files contain averaged results as well as seed-wise error measurements.
+The experiments are repeated over multiple fixed random seeds. For a given seed, the neural network initialization and randomly sampled training points are controlled by the seed. The saved `.npz` files contain averaged results across seeds as well as seed-wise error measurements.
 
-Small numerical differences may occur between runs due to:
+When using the same code, command-line arguments, software environment, and hardware setup, the experiments are expected to be reproducible up to numerical precision.
 
-* random neural network initialization,
-* randomly sampled collocation points,
-* multiprocessing,
-* hardware differences,
-* nondeterministic operations in numerical libraries.
+Small numerical differences may still occur between independent reruns due to floating-point arithmetic, multiprocessing/thread scheduling, hardware differences, and nondeterministic operations in numerical libraries.
 
-To reproduce the figures in the report, either use the provided `.npz` files in `Data/` or rerun the experiment scripts and then execute the relevant plotting script.
+The use of multiple seeds is not meant to introduce uncontrolled randomness, but to measure how sensitive the training results are to initialization and random sampling.
+
+To reproduce the figures in the report, either use the provided `.npz` files in `Data/` or rerun the experiment scripts with the same command-line arguments and then execute the relevant plotting script.
+
 
 ## Relation to the Report
 
@@ -397,27 +398,3 @@ In particular:
 * the report explains the numerical methodology,
 * the report discusses and interprets the results,
 * this repository provides the implementation, data files, and plotting scripts.
-
-## Citation
-
-If this repository is referenced in academic work, please cite the accompanying report.
-
-If the code repository is cited separately, use:
-
-```bibtex
-@misc{lomborg2026pinncode,
-  author       = {Oscar Lomborg},
-  title        = {Supplementary Code for PINN Project},
-  year         = {2026},
-  howpublished = {\url{https://github.com/oscarlomborg/REPOSITORY-NAME}},
-  note         = {Code repository accompanying academic report}
-}
-```
-
-Replace `REPOSITORY-NAME` with the actual GitHub repository name.
-
-## License
-
-Specify the license under which the code is made available.
-
-If no license is included, the repository should not automatically be considered open source. Add a `LICENSE` file if the code is intended to be reused by others.
