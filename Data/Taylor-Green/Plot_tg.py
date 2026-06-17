@@ -205,6 +205,9 @@ def plot_npz_file(file):
 
         print(f"{file} | {name} L_max: {L_max:.2e}")
         print(f"{file} | {name} L_2:    {L_2:.2e}")
+        print(f"{file} | {name} RMSE:    {np.sqrt(np.mean(error**2)):.2e}")
+        print(f"{file} | {name} error variance:    {error.var():.2e}")
+        
 
 
 plot_npz_file(baseline_file)
@@ -526,3 +529,15 @@ for file in moe_files:
 
     fig.colorbar(cf, ax=axes)
     plt.show()
+
+
+
+
+
+
+
+
+
+
+
+
