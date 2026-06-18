@@ -42,8 +42,10 @@ N_LEVELS = 15
 baseline_data = np.load(baseline_file)
 datasets = [np.load(file) for file in files]
 
-#%%
+# p mean correction
+P_MEAN = True
 
+#%%
 # ------------------------------------------------------------
 # Find common color limits for contour plots
 # ------------------------------------------------------------
@@ -63,6 +65,10 @@ for data in all_datasets:
     u_exact_n = data["u_exact_n"]
     v_exact_n = data["v_exact_n"]
     p_exact_n = data["p_exact_n"]
+
+    # p mean correction
+    if P_MEAN:
+        p_pred_n = p_pred_n - p_pred_n.mean() + p_exact_n.mean()
 
     u_min = min(u_min, u_pred_n.min(), u_exact_n.min())
     u_max = max(u_max, u_pred_n.max(), u_exact_n.max())
@@ -154,6 +160,10 @@ def plot_npz_file(file):
     u_exact_n = data["u_exact_n"]
     v_exact_n = data["v_exact_n"]
     p_exact_n = data["p_exact_n"]
+
+    # p mean correction
+    if P_MEAN:
+        p_pred_n = p_pred_n - p_pred_n.mean() + p_exact_n.mean()
 
     fields = [
         ("u", u_exact_n, u_pred_n, levels_u),
