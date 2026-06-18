@@ -43,7 +43,7 @@ baseline_data = np.load(baseline_file)
 datasets = [np.load(file) for file in files]
 
 # p mean correction
-P_MEAN = True
+P_MEAN = False
 
 #%%
 # ------------------------------------------------------------
@@ -243,7 +243,7 @@ for comp_name, key_lmax, key_l2 in components:
     fig, ax = plt.subplots(
         1,
         2,
-        figsize=(12, 5)
+        figsize=(12, 3)
     )
 
     # Baseline
@@ -309,26 +309,26 @@ for comp_name, key_lmax, key_l2 in components:
 
     ax[0].set_xlabel("Seed")
     ax[0].set_ylabel(r"$L_\infty$ fejl")
-    ax[0].set_title(fr"${{{comp_name}}}$: $L_\infty$ vs 'seed'")
+    ax[0].set_title(fr"$\hat{{{comp_name}}}$: $L_\infty$ vs 'seed'")
     ax[0].grid(True)
 
     ax[1].set_xlabel("Seed")
     ax[1].set_ylabel(r"$L_2$ fejl")
-    ax[1].set_title(fr"${{{comp_name}}}$: $L_2$ vs 'seed'")
+    ax[1].set_title(fr"$\hat{{{comp_name}}}$: $L_2$ vs 'seed'")
     ax[1].grid(True)
 
-    # Shared legend under both subplots
-    handles, labels = ax[0].get_legend_handles_labels()
+    # # Shared legend under both subplots
+    # handles, labels = ax[0].get_legend_handles_labels()
 
-    fig.legend(
-        handles,
-        labels,
-        loc="lower center",
-        bbox_to_anchor=(0.5, 0.05),
-        ncol=3
-    )
+    # fig.legend(
+    #     handles,
+    #     labels,
+    #     loc="lower center",
+    #     bbox_to_anchor=(0.5, 0.05),
+    #     ncol=3
+    # )
 
-    fig.tight_layout(rect=[0, 0.18, 1, 1])
+    # fig.tight_layout(rect=[0, 0.18, 1, 1])
 
     plt.show()
 
@@ -375,13 +375,13 @@ for comp_name, key_l2, key_lmax in val_components:
 
     ax[0].set_xlabel("Epoch")
     ax[0].set_ylabel(r"$L_\infty$-valideringsfejl")
-    ax[0].set_title(fr"${{{comp_name}}}$: validering $L_\infty$")
+    ax[0].set_title(fr"$\hat{{{comp_name}}}$: validering $L_\infty$")
     ax[0].grid(True, which="both")
     ax[0].legend()
 
     ax[1].set_xlabel("Epoch")
     ax[1].set_ylabel(r"$L_2$-valideringsfejl")
-    ax[1].set_title(fr"${{{comp_name}}}$: validering $L_2$")
+    ax[1].set_title(fr"$\hat{{{comp_name}}}$: validering $L_2$")
     ax[1].grid(True, which="both")
     ax[1].legend()
 
