@@ -243,7 +243,7 @@ for comp_name, key_lmax, key_l2 in components:
     fig, ax = plt.subplots(
         1,
         2,
-        figsize=(12, 3)
+        figsize=(12, 5)
     )
 
     # Baseline
@@ -317,18 +317,18 @@ for comp_name, key_lmax, key_l2 in components:
     ax[1].set_title(fr"$\hat{{{comp_name}}}$: $L_2$ vs 'seed'")
     ax[1].grid(True)
 
-    # # Shared legend under both subplots
-    # handles, labels = ax[0].get_legend_handles_labels()
+    # Shared legend under both subplots
+    handles, labels = ax[0].get_legend_handles_labels()
 
-    # fig.legend(
-    #     handles,
-    #     labels,
-    #     loc="lower center",
-    #     bbox_to_anchor=(0.5, 0.05),
-    #     ncol=3
-    # )
+    fig.legend(
+        handles,
+        labels,
+        loc="lower center",
+        bbox_to_anchor=(0.5, 0.05),
+        ncol=3
+    )
 
-    # fig.tight_layout(rect=[0, 0.18, 1, 1])
+    fig.tight_layout(rect=[0, 0.18, 1, 1])
 
     plt.show()
 
